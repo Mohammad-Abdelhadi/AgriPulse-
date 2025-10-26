@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AgriPulse - Carbon Credit Trading Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              primary: 'hsl(142 60% 40%)',
+              'primary-light': 'hsl(142 60% 50%)',
+              'primary-dark': 'hsl(142 60% 30%)',
+              secondary: 'hsl(210 40% 96%)',
+              'secondary-dark': 'hsl(210 40% 90%)',
+              accent: 'hsl(45 100% 50%)',
+              'text-primary': 'hsl(210 20% 15%)',
+              'text-secondary': 'hsl(210 15% 45%)',
+              background: 'hsl(0 0% 100%)',
+              surface: 'hsl(220 40% 98%)',
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-out forwards',
+              'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: 0, transform: 'translateY(10px)' },
+                '100%': { opacity: 1, transform: 'translateY(0)' },
+              },
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.25.0",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.4",
+    "@hashgraph/sdk": "https://esm.sh/@hashgraph/sdk@2.19.2"
+  }
+}
+</script>
+</head>
+  <body class="bg-secondary">
+    <div id="root"></div>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "name": "AgriPulse - Carbon Credit Trading Platform",
+  "description": "A blockchain-based carbon credit trading platform connecting farmers and investors. Farmers can register farms, mint carbon credits, and earn NFT badges for their success. Investors can browse a marketplace of approved farms and purchase carbon credits.",
+  "requestFramePermissions": []
+}
