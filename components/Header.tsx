@@ -13,7 +13,7 @@ const Header: React.FC = () => {
     const profileRef = useRef<HTMLDivElement>(null);
     const notificationsRef = useRef<HTMLDivElement>(null);
 
-    const { notifications, unreadCount, markAllAsRead, addNotification } = useNotification();
+    const { notifications, unreadCount, markAllAsRead, addNotification, isMuted, toggleMute } = useNotification();
 
     const baseLinks = [
         { path: '/marketplace', label: 'Marketplace' },
@@ -103,7 +103,16 @@ const Header: React.FC = () => {
                         </button>
                         {notificationsOpen && (
                              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border origin-top-right animate-fade-in">
-                                <div className="p-3 border-b font-semibold text-text-primary">Notifications</div>
+                                <div className="p-3 border-b flex justify-between items-center">
+                                    <span className="font-semibold text-text-primary">Notifications</span>
+                                    <button onClick={toggleMute} title={isMuted ? 'Unmute Notifications' : 'Mute Notifications'} className="p-1 rounded-full hover:bg-gray-100 text-text-secondary">
+                                        {isMuted ? (
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341"></path></svg>
+                                        ) : (
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                        )}
+                                    </button>
+                                </div>
                                 <div className="max-h-96 overflow-y-auto">
                                     {notifications.length > 0 ? notifications.map(n => (
                                          <div key={n.id} className={`p-3 border-b flex items-start space-x-3 transition-colors ${!n.read ? 'bg-blue-50' : 'bg-white'}`}>

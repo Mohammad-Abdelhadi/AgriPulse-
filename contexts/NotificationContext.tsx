@@ -7,11 +7,34 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 // A simple in-memory counter to ensure unique IDs even in rapid succession
 let toastIdCounter = 0;
 
+// Helper function to safely parse JSON from localStorage, preventing crashes from corrupted data.
+const safeJsonParse = <T,>(key: string, defaultValue: T): T => {
+    try {
+        const item = localStorage.getItem(key);
+        if (!item) return defaultValue;
+        return JSON.parse(item) as T;
+    } catch (e) {
+        console.warn(`Could not parse JSON from localStorage for key "${key}". Clearing corrupted data and using default value.`, e);
+        // Clear the corrupted item to prevent future errors
+        localStorage.removeItem(key); 
+        return defaultValue;
+    }
+};
+
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [toasts, setToasts] = useState<Notification[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isMuted, setIsMuted] = useState<boolean>(() => safeJsonParse('agripulse_notifications_muted', false));
+
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => !prev);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('agripulse_notifications_muted', JSON.stringify(isMuted));
+  }, [isMuted]);
 
   // Effect to load/clear notifications on user change
   useEffect(() => {
@@ -61,12 +84,18 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       read: false,
       timestamp: Date.now()
     };
-    setToasts((prev) => [...prev, newNotification]);
+
     // Only add to persistent notifications if a user is logged in
     if (user) {
         setNotifications((prev) => [newNotification, ...prev]);
     }
-  }, [user]);
+    
+    // Only show a toast pop-up if notifications are not muted
+    if (!isMuted) {
+      setToasts((prev) => [...prev, newNotification]);
+    }
+
+  }, [user, isMuted]);
 
   const markAsRead = (id: number) => {
     setNotifications(prev =>
@@ -79,7 +108,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   };
 
   return (
-    <NotificationContext.Provider value={{ toasts, notifications, unreadCount, addNotification, removeToast, markAsRead, markAllAsRead }}>
+    <NotificationContext.Provider value={{ toasts, notifications, unreadCount, isMuted, toggleMute, addNotification, removeToast, markAsRead, markAllAsRead }}>
       {children}
     </NotificationContext.Provider>
   );

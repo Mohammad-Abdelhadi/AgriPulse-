@@ -313,16 +313,8 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const investorLevel = [...INVESTOR_IMPACT_LEVELS].reverse().find(l => tons >= l.tonsThreshold);
             if (investorLevel && investorNftCollectionInfo && investor?.hederaAccountId) {
                 try {
-                    addNotification('Generating unique artwork for investor...', 'info');
-                    const investorPrompt = `NFT artwork for a digital certificate representing a farm purchase of ${tons} tons from '${farm.name}'. Clean, elegant blockchain certificate style with ${investorLevel.rarity.toLowerCase()} tones, futuristic layout, abstract farm background.`;
-                    const investorBase64Image = await geminiService.generateNftImage(investorPrompt);
-
-                    addNotification('Uploading investor artwork to IPFS...', 'info');
-                    const investorImageCid = await pinataService.uploadFileToIpfs(investorBase64Image, `investor_nft_${newPurchase.id}.png`, 'image/png');
-                    const investorImageUrl = `ipfs://${investorImageCid}`;
-
                     const investorMetadataObject = geminiService.generateNftMetadata({
-                        purchaseId: newPurchase.id, farmName: farm.name, tons, nftType: 'investor', recipientEmail: investor.email, imageUrl: investorImageUrl,
+                        purchaseId: newPurchase.id, farmName: farm.name, tons, nftType: 'investor', recipientEmail: investor.email, imageUrl: UNIFIED_NFT_IMAGE_URL,
                         investorAccountId: investor.hederaAccountId,
                         farmerAccountId: farm.farmerHederaAccountId
                     });
@@ -343,8 +335,9 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     };
                     setInvestorNfts(prev => [...prev, newInvestorNft]);
                     addNotification(`Awarded ${investorLevel.name} to investor!`, 'success', investorNftResponse.hashscanUrl);
-
-                } catch (e: any) { addNotification(`Investor NFT Award Failed: ${e.message}`, "error"); }
+                } catch (e: any) {
+                     addNotification(`Failed to mint investor NFT: ${e.message}`, "error");
+                }
             }
             
             const farmerLevel = [...FARMER_LEGACY_LEVELS].reverse().find(l => tons >= l.tonsThreshold);
@@ -352,16 +345,8 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 const farmer = getUser(farm.farmerId);
                 if (farmer && farmer.hederaAccountId) {
                     try {
-                        addNotification('Generating unique artwork for farmer...', 'info');
-                        const farmerPrompt = `NFT artwork for a digital badge representing a farm sale of ${tons} tons from '${farm.name}'. Clean, elegant blockchain badge style with ${farmerLevel.rarity.toLowerCase()} tones, futuristic layout, abstract farm background.`;
-                        const farmerBase64Image = await geminiService.generateNftImage(farmerPrompt);
-
-                        addNotification('Uploading farmer artwork to IPFS...', 'info');
-                        const farmerImageCid = await pinataService.uploadFileToIpfs(farmerBase64Image, `farmer_nft_${newPurchase.id}.png`, 'image/png');
-                        const farmerImageUrl = `ipfs://${farmerImageCid}`;
-
                         const farmerMetadataObject = geminiService.generateNftMetadata({
-                            purchaseId: newPurchase.id, farmName: farm.name, tons, nftType: 'farmer', recipientEmail: investor?.email || 'N/A', imageUrl: farmerImageUrl,
+                            purchaseId: newPurchase.id, farmName: farm.name, tons, nftType: 'farmer', recipientEmail: investor?.email || 'N/A', imageUrl: UNIFIED_NFT_IMAGE_URL,
                             investorAccountId: investor?.hederaAccountId || 'N/A',
                             farmerAccountId: farmer.hederaAccountId
                         });
@@ -382,7 +367,9 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         };
                         setFarmerNfts(prev => [...prev, newFarmerNft]);
                         addNotification(`Awarded ${farmerLevel.name} to farmer!`, 'success', farmerNftResponse.hashscanUrl);
-                    } catch (e: any) { addNotification(`Farmer NFT Award Failed: ${e.message}`, "error"); }
+                    } catch (e: any) {
+                        addNotification(`Failed to mint farmer NFT: ${e.message}`, "error");
+                    }
                 }
             }
 

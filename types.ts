@@ -233,6 +233,8 @@ export interface NotificationContextType {
     toasts: Notification[];
     notifications: Notification[];
     unreadCount: number;
+    isMuted: boolean;
+    toggleMute: () => void;
     addNotification: (message: string, type: NotificationType, link?: string) => void;
     removeToast: (id: number) => void;
     markAsRead: (id: number) => void;

@@ -8,10 +8,9 @@ const AdminDashboard: React.FC = () => {
         farms, platformTokenInfo, loading, purchases,
         farmerNftCollectionInfo, investorNftCollectionInfo, farmNftCollectionInfo,
         hcsTopicId,
-        deletePlatformToken, deleteNftCollection, initializePlatform
+        initializePlatform
     } = useFarm();
     const [activeTab, setActiveTab] = useState('dashboard');
-    const [deleteModal, setDeleteModal] = useState<{ open: boolean; item: any; type: 'token' | 'nft' }>({ open: false, item: null, type: 'token' });
     const [initModalOpen, setInitModalOpen] = useState(false);
 
     const [initDetails, setInitDetails] = useState<Omit<PlatformInitializationDetails, 'hcsTopicId'>>({
@@ -49,16 +48,6 @@ const AdminDashboard: React.FC = () => {
 
     const totalCommissionEarned = useMemo(() => commissionHistory.reduce((sum, item) => sum + item.commissionHbar, 0), [commissionHistory]);
 
-    const handleDeleteSubmit = () => {
-        if (!deleteModal.item) return;
-        if (deleteModal.type === 'token') {
-            deletePlatformToken();
-        } else {
-            deleteNftCollection(deleteModal.item.id);
-        }
-        setDeleteModal({ open: false, item: null, type: 'token' });
-    };
-
     const handleInitializePlatform = () => {
         initializePlatform(initDetails);
         setInitModalOpen(false);
@@ -78,7 +67,6 @@ const AdminDashboard: React.FC = () => {
         { id: 'dashboard', label: 'Dashboard' },
         { id: 'farmVerifications', label: 'Farm Verifications' },
         { id: 'commissionHistory', label: 'Commission History' },
-        { id: 'dangerZone', label: 'Danger Zone' }
     ];
 
     const TabButton: React.FC<{ id: string; label: string }> = ({ id, label }) => (
@@ -165,13 +153,13 @@ const AdminDashboard: React.FC = () => {
                                 <h3 className="text-xl font-semibold mb-2">{title} Farms ({farmList.length})</h3>
                                 <div className="bg-white rounded-lg shadow-md overflow-x-auto">
                                     {farmList.length > 0 ? (
-                                        <table className="min-w-full divide-y divide-gray-200">
+                                        <table className="min-w-full divide-y divide-gray-200 table-fixed">
                                             <thead className="bg-gray-100">
                                                 <tr>
-                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Farm</th>
+                                                    <th className="w-1/4 px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Farm</th>
                                                     <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Credits</th>
                                                     <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Score</th>
-                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Reason/On-Chain ID</th>
+                                                    <th className="w-1/3 px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Reason/On-Chain ID</th>
                                                     <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">HCS Receipt</th>
                                                 </tr>
                                             </thead>
@@ -186,7 +174,7 @@ const AdminDashboard: React.FC = () => {
                                                         <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${farm.approvalScore && farm.approvalScore >= APPROVAL_THRESHOLD ? 'text-green-600' : 'text-red-600'}`}>
                                                             {farm.approvalScore != null ? `${farm.approvalScore}/100` : 'N/A'}
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-text-secondary">
+                                                        <td className="px-6 py-4 whitespace-normal text-xs text-text-secondary break-words">
                                                             {farm.farmNftHashscanUrl ? <a href={farm.farmNftHashscanUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Verified NFT</a> : farm.rejectionReason}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-xs">
@@ -236,21 +224,6 @@ const AdminDashboard: React.FC = () => {
                         </div>
                     </div>
                 )}
-
-                {activeTab === 'dangerZone' && (
-                    <div className="bg-red-50 border-2 border-dashed border-red-200 p-6 rounded-xl shadow-lg">
-                        <h2 className="text-2xl font-bold text-red-800">Danger Zone</h2>
-                        <p className="text-red-700 text-sm mt-2">These actions are irreversible and will permanently delete on-chain assets. Use with caution.</p>
-                        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {[platformTokenInfo, farmerNftCollectionInfo, investorNftCollectionInfo, farmNftCollectionInfo].map(collection => collection && (
-                                <div key={collection.id} className="bg-white p-4 rounded-lg border border-red-200 flex justify-between items-center">
-                                    <div><h3 className="font-bold">{collection.name} ({collection.symbol})</h3><p className="text-xs text-text-secondary truncate">ID: {collection.id}</p></div>
-                                    <button onClick={() => setDeleteModal({ open: true, item: collection, type: 'token' })} disabled={loading} className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400">Delete</button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
             </div>
 
             {initModalOpen && (
@@ -291,10 +264,6 @@ const AdminDashboard: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            )}
-
-            {deleteModal.open && (
-                <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in"><div className="bg-white rounded-lg shadow-2xl p-8 max-w-lg w-full m-4"><div className="sm:flex sm:items-start"><div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"><svg className="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></div><div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left"><h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">Confirm Deletion</h3><div className="mt-2"><p className="text-sm text-gray-500">Are you sure you want to delete <span className="font-bold">{deleteModal.item.name}</span>? This will wipe/burn all associated assets and permanently delete the token from Hedera. <strong className="block mt-2">This action is irreversible.</strong></p></div></div></div><div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse"><button onClick={handleDeleteSubmit} className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">{loading ? 'Deleting...' : 'Yes, Delete'}</button><button type="button" onClick={() => setDeleteModal({ open: false, item: null, type: 'token' })} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm">Cancel</button></div></div></div>
             )}
         </div>
     );

@@ -250,15 +250,15 @@ const FarmerDashboard: React.FC = () => {
                     
                     <div className="bg-white rounded-lg shadow-md overflow-x-auto">
                         {myFarms.length > 0 ? (
-                            <table className="min-w-full divide-y divide-gray-200">
+                            <table className="min-w-full divide-y divide-gray-200 table-fixed">
                                 <thead className="bg-gray-100">
                                     <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Farm Name</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Available Credits</th>
+                                        <th className="w-1/4 px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Farm Name</th>
+                                        <th className="w-1/4 px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Available Credits</th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Price/Ton</th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Score</th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Status</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">On-Chain</th>
+                                        <th className="w-1/3 px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">On-Chain</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -282,7 +282,7 @@ const FarmerDashboard: React.FC = () => {
                                                     {farm.status}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                                            <td className="px-6 py-4 whitespace-normal text-sm text-text-secondary break-words">
                                                 {farm.farmNftHashscanUrl ? (
                                                     <a href={farm.farmNftHashscanUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">
                                                         Verified
