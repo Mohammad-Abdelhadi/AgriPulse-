@@ -53,25 +53,21 @@ export const dMRVService = {
         totalScore += logicScore;
         
         // 4. Certificate Validation Score (Max 30)
-        // FIX: Re-structured the logic with nested checks to ensure TypeScript correctly
-        // narrows the `certificate` type before passing it to the analysis service.
         if (!certificate) {
             breakdown['certificateValidation'] = { score: 0, max: 30, reason: "No certificate provided." };
+        } else if (certificate.mimeType !== 'application/pdf') {
+            breakdown['certificateValidation'] = { score: 0, max: 30, reason: "Only PDF files are accepted for certificate validation." };
         } else {
-            if (certificate.mimeType !== 'application/pdf') {
-                breakdown['certificateValidation'] = { score: 0, max: 30, reason: "Only PDF files are accepted for certificate validation." };
-            } else {
-                // By this point, TypeScript has correctly narrowed the type of `certificate`.
-                try {
-                    console.log("dMRV: Sending certificate to Gemini for analysis...");
-                    const certAnalysis = await geminiService.analyzeCertificate(certificate);
-                    const certScore = Math.round(certAnalysis.score * (30 / 100)); // Scale to 30 max points
-                    totalScore += certScore;
-                    breakdown['certificateValidation'] = { score: certScore, max: 30, reason: certAnalysis.justification };
-                } catch (error: any) {
-                    console.error("Certificate validation step failed:", error.message);
-                    breakdown['certificateValidation'] = { score: 0, max: 30, reason: `AI analysis failed: ${error.message}` };
-                }
+            try {
+                console.log("dMRV: Sending certificate to Gemini for analysis...");
+                // FIX: Cast certificate to the expected type for the geminiService call. The `if` condition above ensures this is a safe type assertion.
+                const certAnalysis = await geminiService.analyzeCertificate(certificate as { mimeType: 'application/pdf'; data: string; });
+                const certScore = Math.round(certAnalysis.score * (30 / 100)); // Scale to 30 max points
+                totalScore += certScore;
+                breakdown['certificateValidation'] = { score: certScore, max: 30, reason: certAnalysis.justification };
+            } catch (error: any) {
+                console.error("Certificate validation step failed:", error.message);
+                breakdown['certificateValidation'] = { score: 0, max: 30, reason: `AI analysis failed: ${error.message}` };
             }
         }
 
@@ -106,9 +102,14 @@ export const dMRVService = {
 
 
         const isApproved = totalScore >= APPROVAL_THRESHOLD;
-        const reason = isApproved 
+        let reason = isApproved 
             ? `Farm approved with a score of ${totalScore}.`
             : `Farm rejected. Score of ${totalScore} is below the required ${APPROVAL_THRESHOLD}.`;
+            
+        // If AI validation was the primary reason for rejection, add more detail.
+        if (!isApproved && breakdown.aiValidation && breakdown.aiValidation.score < 0) {
+            reason += ` AI analysis flagged potential data quality issues: ${breakdown.aiValidation.reason}`;
+        }
             
         console.log(`dMRV Result: Final Score ${totalScore}, Approved: ${isApproved}`);
 

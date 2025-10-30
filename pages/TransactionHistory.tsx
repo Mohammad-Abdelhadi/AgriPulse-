@@ -45,7 +45,47 @@ const TransactionHistory: React.FC = () => {
 
         const items: TransactionItem[] = [];
 
-        if (user.role === AppRole.INVESTOR) {
+        if (user.role === AppRole.ADMIN) {
+            // Admin sees all platform activity
+            purchases.forEach(p => {
+                const farm = farms.find(f => f.id === p.farmId);
+                items.push({
+                    id: `p-${p.id}`, date: p.purchaseDate, type: 'Credit Purchase',
+                    description: `From ${farm?.name || 'Unknown'} by ${p.investorEmail}`,
+                    details: `${p.tonsPurchased.toLocaleString()} CO₂e for $${p.totalPrice.toFixed(2)}`,
+                    actions: [{ label: 'View Transaction', url: p.hashscanUrl }]
+                });
+            });
+
+            retirements.forEach(r => {
+                items.push({
+                    id: `r-${r.id}`, date: r.retirementDate, type: 'Credit Retirement',
+                    description: `Retired by Investor ID: ${r.investorId}`,
+                    details: `${r.amount.toLocaleString()} CO₂e credits permanently retired`,
+                    actions: [{ label: 'View Retirement TX', url: r.hashscanUrl }]
+                });
+            });
+
+            investorNfts.forEach(n => {
+                const level = INVESTOR_IMPACT_LEVELS.find(l => l.id === n.nftLevelId);
+                items.push({
+                    id: `inft-${n.id}`, date: n.mintDate, type: 'NFT Mint',
+                    description: `Awarded to Investor Account: ${n.investorHederaAccountId}`,
+                    details: `${level?.name || 'NFT Certificate'} (S/N: ${n.hederaSerialNumber})`,
+                    actions: [{ label: 'View Mint Transaction', url: n.hashscanUrl }],
+                });
+            });
+
+            farmerNfts.forEach(n => {
+                const level = FARMER_LEGACY_LEVELS.find(l => l.id === n.nftLevelId);
+                items.push({
+                    id: `fnft-${n.id}`, date: n.mintDate, type: 'NFT Mint',
+                    description: `Awarded to Farmer Account: ${n.farmerHederaAccountId}`,
+                    details: `${level?.name || 'NFT Badge'} (S/N: ${n.hederaSerialNumber})`,
+                    actions: [{ label: 'View Mint Transaction', url: n.hashscanUrl }],
+                });
+            });
+        } else if (user.role === AppRole.INVESTOR) {
             purchases.filter(p => p.investorId === user.id).forEach(p => {
                 const farm = farms.find(f => f.id === p.farmId);
                 const purchaseActions = [{ label: 'View HBAR Payment', url: p.hashscanUrl }];
@@ -78,9 +118,7 @@ const TransactionHistory: React.FC = () => {
                     actions: [{ label: 'View Mint Transaction', url: n.hashscanUrl }],
                 });
             });
-        }
-
-        if (user.role === AppRole.FARMER) {
+        } else if (user.role === AppRole.FARMER) {
             const myFarmIds = new Set(farms.filter(f => f.farmerId === user.id).map(f => f.id));
             
             purchases.filter(p => myFarmIds.has(p.farmId)).forEach(p => {

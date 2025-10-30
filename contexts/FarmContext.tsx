@@ -133,47 +133,21 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const farmId = `farm_${Date.now()}`;
 
             addNotification("Recording verification decision on-chain...", "info");
-            const hcsMessage = {
+            
+            // Create a concise summary for the on-chain log to prevent message size errors.
+            // The full breakdown is not stored on-chain to respect HCS message size limits.
+            const hcsSummaryMessage = {
                 farmId: farmId,
-                farmerHederaAccountId: user.hederaAccountId,
+                farmer: user.hederaAccountId,
                 decision: verificationResult.isApproved ? 'APPROVED' : 'REJECTED',
                 score: verificationResult.score,
-                reason: verificationResult.reason,
+                reason: verificationResult.reason, // The reason is already a concise summary.
                 timestamp: new Date().toISOString(),
-                calculationBreakdown: verificationResult.breakdown
             };
+
+            // Use compact JSON stringifying to save space.
+            const finalMessageString = JSON.stringify(hcsSummaryMessage);
             
-            // --- START: Logic to ensure single HCS message ---
-            let finalMessageString = JSON.stringify(hcsMessage, null, 2);
-            // The Hedera SDK's default chunk size is ~1KB. We set a safe limit to ensure the message fits in a single chunk.
-            const MAX_HCS_MESSAGE_SIZE = 1000; 
-
-            if (new TextEncoder().encode(finalMessageString).length > MAX_HCS_MESSAGE_SIZE) {
-                console.warn(`Original HCS message (${new TextEncoder().encode(finalMessageString).length} bytes) is too large. Truncating AI justification...`);
-
-                // Create a copy to avoid mutating the original object used elsewhere
-                const messageToTruncate = JSON.parse(JSON.stringify(hcsMessage));
-                const aiReason = messageToTruncate.calculationBreakdown.aiValidation.reason || "";
-                
-                // Temporarily remove the reason to calculate the message size without it
-                messageToTruncate.calculationBreakdown.aiValidation.reason = "";
-                const baseMessageSize = new TextEncoder().encode(JSON.stringify(messageToTruncate, null, 2)).length;
-
-                // Calculate available space for the reason, with a small buffer
-                const availableSpace = MAX_HCS_MESSAGE_SIZE - baseMessageSize - 50; // 50 bytes buffer for JSON quotes, keys etc.
-
-                if (availableSpace > 0) {
-                    messageToTruncate.calculationBreakdown.aiValidation.reason = aiReason.substring(0, availableSpace) + '... [TRUNCATED]';
-                } else {
-                    // Fallback if the message is too long even without the AI reason
-                    messageToTruncate.calculationBreakdown.aiValidation.reason = "Reason truncated due to size limits.";
-                }
-                
-                finalMessageString = JSON.stringify(messageToTruncate, null, 2);
-                console.log(`HCS message truncated. New size: ${new TextEncoder().encode(finalMessageString).length} bytes.`);
-            }
-            // --- END: Logic ---
-
             const hcsResponse = await hederaService.submitHcsMessage(hcsTopicId, finalMessageString, adminUser.hederaAccountId, adminUser.hederaPrivateKey);
 
             if (verificationResult.isApproved) {
@@ -330,18 +304,14 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             addNotification("Checking for achievement NFTs...", "info");
             
-            const getEmail = (id: string): string => {
-                const userEntry = Object.values(allUsers).find((u: any) => u.id === id) as any;
-                return userEntry?.email || 'Unknown';
-            }
-            const getUser = (id: string) => {
-                 const email = getEmail(id);
-                 return allUsers[email];
+            const getUser = (id: string): User | undefined => {
+                const userEntry = Object.values(allUsers).find((u: any) => u.id === id) as User;
+                return userEntry;
             }
             const investor = getUser(newPurchase.investorId);
 
             const investorLevel = [...INVESTOR_IMPACT_LEVELS].reverse().find(l => tons >= l.tonsThreshold);
-            if (investorLevel && investorNftCollectionInfo) {
+            if (investorLevel && investorNftCollectionInfo && investor?.hederaAccountId) {
                 try {
                     addNotification('Generating unique artwork for investor...', 'info');
                     const investorPrompt = `NFT artwork for a digital certificate representing a farm purchase of ${tons} tons from '${farm.name}'. Clean, elegant blockchain certificate style with ${investorLevel.rarity.toLowerCase()} tones, futuristic layout, abstract farm background.`;
@@ -365,7 +335,7 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     const investorNftResponse = await hederaService.mintAndTransferNft(investorNftCollectionInfo.id, adminUser.hederaAccountId, adminUser.hederaPrivateKey, investor.hederaAccountId, investorOnChainMetadata);
                     
                     const newInvestorNft: InvestorNft = {
-                        id: `inft_${Date.now()}`, investorId: newPurchase.investorId, nftLevelId: investorLevel.id, 
+                        id: `inft_${Date.now()}`, investorId: newPurchase.investorId, investorHederaAccountId: investor.hederaAccountId, nftLevelId: investorLevel.id, 
                         mintDate: new Date().toISOString(), hederaTokenId: investorNftCollectionInfo.id,
                         hederaSerialNumber: investorNftResponse.serialNumber, hashscanUrl: investorNftResponse.hashscanUrl,
                         purchaseId: newPurchase.id, tons: tons, farmName: farm.name,
@@ -391,8 +361,8 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         const farmerImageUrl = `ipfs://${farmerImageCid}`;
 
                         const farmerMetadataObject = geminiService.generateNftMetadata({
-                            purchaseId: newPurchase.id, farmName: farm.name, tons, nftType: 'farmer', recipientEmail: investor.email, imageUrl: farmerImageUrl,
-                            investorAccountId: investor.hederaAccountId,
+                            purchaseId: newPurchase.id, farmName: farm.name, tons, nftType: 'farmer', recipientEmail: investor?.email || 'N/A', imageUrl: farmerImageUrl,
+                            investorAccountId: investor?.hederaAccountId || 'N/A',
                             farmerAccountId: farmer.hederaAccountId
                         });
 
@@ -404,10 +374,10 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         const farmerNftResponse = await hederaService.mintAndTransferNft(farmerNftCollectionInfo.id, adminUser.hederaAccountId, adminUser.hederaPrivateKey, farmer.hederaAccountId, farmerOnChainMetadata);
 
                         const newFarmerNft: FarmerNft = {
-                            id: `fnft_${Date.now()}`, farmerId: farm.farmerId, nftLevelId: farmerLevel.id,
+                            id: `fnft_${Date.now()}`, farmerId: farm.farmerId, farmerHederaAccountId: farm.farmerHederaAccountId, nftLevelId: farmerLevel.id,
                             mintDate: new Date().toISOString(), hederaTokenId: farmerNftCollectionInfo.id,
                             hederaSerialNumber: farmerNftResponse.serialNumber, hashscanUrl: farmerNftResponse.hashscanUrl,
-                            purchaseId: newPurchase.id, tons: tons, investorEmail: investor.email,
+                            purchaseId: newPurchase.id, tons: tons, investorEmail: investor?.email || 'N/A',
                             metadataUrl: farmerOnChainMetadata
                         };
                         setFarmerNfts(prev => [...prev, newFarmerNft]);

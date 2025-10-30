@@ -91,6 +91,7 @@ export interface FarmerNftLevel {
 export interface FarmerNft {
     id: string;
     farmerId: string;
+    farmerHederaAccountId: string;
     nftLevelId: string;
     mintDate: string;
     hederaTokenId: string;
@@ -115,6 +116,7 @@ export interface InvestorNftLevel {
 export interface InvestorNft {
     id: string;
     investorId: string;
+    investorHederaAccountId: string;
     nftLevelId: string;
     mintDate: string;
     hederaTokenId: string;

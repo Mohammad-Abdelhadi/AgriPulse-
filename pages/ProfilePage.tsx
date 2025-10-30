@@ -92,7 +92,7 @@ const ProfilePage: React.FC = () => {
             </div>
 
             {isProfileModalOpen && (
-                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+                 <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
                      <form onSubmit={handleProfileUpdate} className="bg-white rounded-lg shadow-2xl max-w-lg w-full m-4">
                          <div className="p-6 border-b">
                             <h2 className="text-2xl font-bold text-text-primary">Manage Company Profile</h2>

@@ -133,7 +133,7 @@ export const geminiService = {
                 - Check if the name, location, and story seem like genuine entries or random spam characters (e.g., "ssssss").
                 - Check if the crop type, land area, and selected practices are consistent with the geographical location and the farm's story.
                 - Provide your analysis ONLY in the following JSON format.
-                - IMPORTANT: The 'justification' field must be a concise summary of your findings and MUST NOT exceed 300 characters.
+                - IMPORTANT: The 'justification' field must be a concise, direct summary of your findings, strictly under 150 characters. For example: "Inconsistent crop type for location." or "Plausible data with strong narrative."
                 
                 Data: ${JSON.stringify(dataToAnalyze, null, 2)}
             `;
@@ -143,7 +143,7 @@ export const geminiService = {
                 properties: {
                     plausibilityScore: { type: Type.NUMBER, description: "A score from 0 (spam/random) to 100 (highly plausible)." },
                     consistencyScore: { type: Type.NUMBER, description: "A score from 0 (inconsistent) to 100 (highly consistent)." },
-                    justification: { type: Type.STRING, description: "A brief justification for your scores, maximum 300 characters." }
+                    justification: { type: Type.STRING, description: "A brief justification for your scores, maximum 150 characters." }
                 }
             };
             

@@ -44,7 +44,12 @@ const Marketplace: React.FC = () => {
                 <p className="mt-4 text-lg text-text-secondary max-w-2xl mx-auto">Invest in a greener future by purchasing carbon credits directly from our trusted farmers.</p>
             </div>
             
-            {!user?.hederaAccountId && (
+            {!user ? (
+                 <div className="mb-8 bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-md" role="alert">
+                    <p className="font-bold">Welcome, Guest!</p>
+                    <p>To participate in the marketplace, please <Link to="/auth" className="underline font-semibold">create an account</Link> and connect your wallet.</p>
+                </div>
+            ) : !user.hederaAccountId && (
                  <div className="mb-8 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md" role="alert">
                     <p className="font-bold">Connect Your Wallet</p>
                     <p>To purchase carbon credits, please connect your Hedera account on the <Link to="/wallet" className="underline font-semibold">Wallet page</Link>.</p>
@@ -108,7 +113,7 @@ const Marketplace: React.FC = () => {
             )}
             
             {selectedFarm && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+                <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
                     <div className="bg-white rounded-lg shadow-2xl max-w-md w-full m-4">
                         <div className="flex justify-between items-center p-6 border-b">
                            <div className="flex items-center space-x-3">

@@ -173,39 +173,6 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
-
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="p-12 shadow-medium bg-gradient-to-br from-primary to-primary-dark text-primary-foreground text-center rounded-xl">
-            <h2 className="text-4xl font-bold mb-4">
-              Ready to Make an Impact?
-            </h2>
-            <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-              Join thousands of farmers and investors creating a sustainable future.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/auth">
-                <button className="text-lg h-14 px-8 bg-white text-primary font-bold rounded-lg hover:bg-gray-200 transition-colors w-full sm:w-auto">
-                  Register Your Farm
-                </button>
-              </Link>
-               <Link to="/auth">
-                <button className="text-lg h-14 px-8 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-lg font-semibold hover:bg-white/20 transition-colors w-full sm:w-auto">
-                  Invest in Credits
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-border py-12">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} AgriPulse Marketplace. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 };

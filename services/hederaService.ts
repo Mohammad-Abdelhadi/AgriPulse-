@@ -518,8 +518,9 @@ class HederaService {
 
         } catch (err: any) {
             console.error("Error submitting HCS message:", err);
-            if (err.message?.includes('MESSAGE_SIZE_TOO_LARGE')) {
-                throw new Error("HCS submission failed: The verification message is too large for a single transaction even after truncation. Please shorten farm details.");
+            // Check for the specific error message from the Hedera SDK when a message exceeds the single chunk limit.
+            if (err.message?.includes('too long for 1 chunks')) {
+                throw new Error("HCS submission failed: The verification summary is too large. Please shorten farm details like name or story and try again.");
             }
             throw new Error(err.message || "An error occurred while submitting HCS message.");
         }

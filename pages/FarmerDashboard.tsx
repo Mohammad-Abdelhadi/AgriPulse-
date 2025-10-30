@@ -2,25 +2,24 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFarm } from '../contexts/FarmContext';
 import { Farm, FarmStatus, AppRole, NftRarity } from '../types';
-import { FARMER_LEGACY_LEVELS, PRACTICES, HECTARE_TO_DUNUM } from '../constants';
+import { FARMER_LEGACY_LEVELS, PRACTICES, HECTARE_TO_DUNUM, APPROVAL_THRESHOLD } from '../constants';
 import { Link } from 'react-router-dom';
 import { hederaService } from '../services/hederaService';
 import QrCodeModal from '../components/QrCodeModal';
 import NftCard from '../components/NftCard';
-import { geminiService } from '../services/geminiService';
 import { useNotification } from '../contexts/NotificationContext';
 
 const FarmerDashboard: React.FC = () => {
     const { user } = useAuth();
-    const { farms, registerFarm, error, hbarToUsdRate, farmerNftCollectionInfo, associateWithFarmerNftCollection, farmerNfts } = useFarm();
+    const { farms, registerFarm, error, hbarToUsdRate, farmerNftCollectionInfo, associateWithFarmerNftCollection, farmerNfts, loading } = useFarm();
     const { addNotification: showToast } = useNotification();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAssociated, setIsAssociated] = useState(false);
     const [associationLoading, setAssociationLoading] = useState(false);
     const [checkingAssociation, setCheckingAssociation] = useState(true);
     const [qrCodeModal, setQrCodeModal] = useState({ isOpen: false, url: '' });
-    const [isGenerating, setIsGenerating] = useState(false);
     const [activeTab, setActiveTab] = useState('farms');
+    const [lastSubmissionTime, setLastSubmissionTime] = useState(0);
 
     // New Farm State
     const [farmName, setFarmName] = useState('');
@@ -111,6 +110,14 @@ const FarmerDashboard: React.FC = () => {
 
     const handleRegisterFarm = (e: React.FormEvent) => {
         e.preventDefault();
+
+        const now = Date.now();
+        if (now - lastSubmissionTime < 10000) { // 10 seconds
+            showToast("Please wait at least 10 seconds between farm submissions.", "error");
+            return;
+        }
+        setLastSubmissionTime(now);
+
         if (user) {
             const certificatePayload = certificateFile && certificateBase64 
                 ? { mimeType: certificateFile.type, data: certificateBase64 } 
@@ -153,30 +160,6 @@ const FarmerDashboard: React.FC = () => {
                 setIsProcessingFile(false);
             };
             reader.readAsDataURL(file);
-        }
-    };
-
-    const handleGenerateWithAI = async () => {
-        setIsGenerating(true);
-        showToast("Generating farm data with AI... This may take a moment.", "info");
-        try {
-            const data = await geminiService.generateFarmData();
-            
-            setFarmName(data.name);
-            setLocation(data.location);
-            setStory(data.story);
-            setLandArea(data.landArea);
-            setAreaUnit(data.areaUnit);
-            setCropType(data.cropType);
-            setSelectedPractices(new Set(data.practices));
-            setPricePerTon(data.pricePerTon);
-            
-            showToast("AI-generated farm data populated successfully!", "success");
-        } catch (error: any) {
-            console.error("Failed to generate farm with AI", error);
-            showToast(error.message || "An error occurred while generating AI data.", "error");
-        } finally {
-            setIsGenerating(false);
         }
     };
 
@@ -268,23 +251,31 @@ const FarmerDashboard: React.FC = () => {
                     <div className="bg-white rounded-lg shadow-md overflow-x-auto">
                         {myFarms.length > 0 ? (
                             <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
+                                <thead className="bg-gray-100">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Farm Name</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Annual Credits (Est.)</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Price/Ton</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Status</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">On-Chain</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Farm Name</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Available Credits</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Price/Ton</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Score</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">On-Chain</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {myFarms.map(farm => (
-                                        <tr key={farm.id}>
-                                            <td className="px-6 py-4 whitespace-nowrap font-medium text-text-primary">{farm.name}</td>
+                                        <tr key={farm.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4 whitespace-nowrap font-semibold text-text-primary">{farm.name}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-text-primary">{farm.availableTons.toLocaleString()} / {farm.totalTons.toLocaleString()}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-text-primary">
                                                 <div>${farm.pricePerTon.toFixed(2)}</div>
                                                 {hbarToUsdRate > 0 && <div className="text-xs text-text-secondary">~ {(farm.pricePerTon / hbarToUsdRate).toFixed(2)} ℏ</div>}
+                                            </td>
+                                            <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${
+                                                farm.approvalScore && farm.approvalScore >= APPROVAL_THRESHOLD
+                                                    ? 'text-green-600'
+                                                    : 'text-red-600'
+                                            }`}>
+                                                {farm.approvalScore != null ? `${farm.approvalScore}/100` : 'N/A'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getStatusPill(farm.status)}`}>
@@ -346,7 +337,7 @@ const FarmerDashboard: React.FC = () => {
 
             {isModalOpen && (
                 <div 
-                    className="fixed inset-0 bg-black bg-opacity-50 z-50 grid place-items-center p-4 animate-fade-in" 
+                    className="fixed inset-0 bg-white/30 backdrop-blur-sm z-50 grid place-items-center p-4 animate-fade-in" 
                     onClick={() => setIsModalOpen(false)}
                 >
                     <div 
@@ -430,30 +421,12 @@ const FarmerDashboard: React.FC = () => {
                                 </div>
 
                                 {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        {isGenerating ? (
-                                            <div className="flex items-center space-x-2 text-sm text-yellow-800 bg-yellow-100 font-semibold py-2 px-4 rounded-lg">
-                                                <svg className="animate-spin h-5 w-5 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                <span>Generating...</span>
-                                            </div>
-                                        ) : (
-                                            <button 
-                                                type="button" 
-                                                onClick={handleGenerateWithAI} 
-                                                className="flex items-center space-x-2 text-sm bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-semibold py-2 px-4 rounded-lg transition-colors"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
-                                                <span>Generate with AI</span>
-                                            </button>
-                                        )}
-                                    </div>
+                                <div className="flex justify-end items-center">
                                     <div className="flex justify-end space-x-4">
-                                        <button type="button" onClick={() => setIsModalOpen(false)} disabled={isGenerating || isProcessingFile} className="px-6 py-2 rounded-lg bg-gray-200 text-text-secondary hover:bg-gray-300 transition-colors disabled:opacity-50">Cancel</button>
-                                        <button type="submit" disabled={isGenerating || isProcessingFile} className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50">Submit for Verification</button>
+                                        <button type="button" onClick={() => setIsModalOpen(false)} disabled={isProcessingFile} className="px-6 py-2 rounded-lg bg-gray-200 text-text-secondary hover:bg-gray-300 transition-colors disabled:opacity-50">Cancel</button>
+                                        <button type="submit" disabled={isProcessingFile || loading} className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-wait">
+                                            {loading ? 'Submitting...' : 'Submit for Verification'}
+                                        </button>
                                     </div>
                                 </div>
                             </div>

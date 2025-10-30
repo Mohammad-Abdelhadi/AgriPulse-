@@ -2,7 +2,7 @@ import { FarmerNftLevel, InvestorNftLevel, NftRarity } from './types';
 
 // A single, unified image for all achievement NFTs to ensure brand consistency.
 // FIX: Export UNIFIED_NFT_IMAGE_URL to make it available for import.
-export const UNIFIED_NFT_IMAGE_URL = 'https://i.ibb.co/68yL2q0/nft-badge-unified.png';
+export const UNIFIED_NFT_IMAGE_URL = 'https://copper-careful-dragonfly-654.mypinata.cloud/ipfs/bafkreihj5zrzybxgowttek6nsvrxafksuh5hakci47ouduunxa34cjg3p4';
 
 export const HECTARE_TO_DUNUM = 10;
 

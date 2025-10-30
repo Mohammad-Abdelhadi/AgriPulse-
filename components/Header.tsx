@@ -18,12 +18,18 @@ const Header: React.FC = () => {
     const baseLinks = [
         { path: '/marketplace', label: 'Marketplace' },
         { path: '/our-process', label: 'Our Process' },
-        { path: '/nft-gallery', label: 'NFT Gallery' },
     ];
+    
+    if (user?.role !== AppRole.ADMIN) {
+        baseLinks.push({ path: '/nft-gallery', label: 'NFT Gallery' });
+    }
 
     const farmerLinks = [{ path: '/farmer', label: 'My Farm' }];
     const investorLinks = [{ path: '/investor', label: 'My Dashboard' }];
-    const adminLinks = [{ path: '/admin', label: 'Admin Dashboard' }];
+    const adminLinks = [
+        { path: '/admin', label: 'Admin Dashboard' },
+        { path: '/transaction-history', label: 'Platform History' }
+    ];
     const serviceProviderLinks = [{ path: '/service-provider', label: 'My Services' }];
 
     let links = [...baseLinks];
