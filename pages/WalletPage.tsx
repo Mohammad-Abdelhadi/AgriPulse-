@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotification } from '../contexts/NotificationContext';
 
 const WalletPage: React.FC = () => {
     const { user, updateUserWallet } = useAuth();
+    const { addNotification } = useNotification();
     const [accountId, setAccountId] = useState('');
     const [privateKey, setPrivateKey] = useState('');
 
@@ -12,10 +14,15 @@ const WalletPage: React.FC = () => {
         }
     }, [user]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        updateUserWallet(accountId, privateKey);
-        setPrivateKey(''); // Clear private key from state after submission for security
+        try {
+            const message = await updateUserWallet(accountId, privateKey);
+            addNotification(message, 'success');
+            setPrivateKey(''); // Clear private key from state after submission for security
+        } catch (error: any) {
+            addNotification(error.message, 'error');
+        }
     };
 
     return (

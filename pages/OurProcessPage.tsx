@@ -70,8 +70,22 @@ const OurProcessPage: React.FC = () => {
                         {activeTab === 'farmer' ? renderTimeline(farmerSteps) : renderTimeline(investorSteps)}
                     </div>
                 </section>
+                
+                 <section className="py-20 bg-muted/30">
+                    <div className="container mx-auto px-4 text-center">
+                        <h2 className="text-3xl font-bold text-text-primary">The Platform Steward</h2>
+                        <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+                            Curious about how the platform is managed? Learn about the crucial role of the platform administrator in maintaining integrity and enabling the marketplace.
+                        </p>
+                        <Link to="/admin-process">
+                            <button className="mt-8 text-lg h-14 px-8 bg-gray-800 text-white rounded-lg font-semibold hover:bg-black transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                Explore the Admin's Role
+                            </button>
+                        </Link>
+                    </div>
+                </section>
 
-                <section className="py-20 bg-muted/30">
+                <section className="py-20">
                     <div className="container mx-auto px-4">
                       <div className="p-12 shadow-medium bg-gradient-to-br from-primary to-primary-dark text-primary-foreground text-center rounded-xl">
                         <h2 className="text-4xl font-bold mb-4">

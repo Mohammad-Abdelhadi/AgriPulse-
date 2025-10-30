@@ -13,7 +13,7 @@ const Header: React.FC = () => {
     const profileRef = useRef<HTMLDivElement>(null);
     const notificationsRef = useRef<HTMLDivElement>(null);
 
-    const { notifications, unreadCount, markAllAsRead } = useNotification();
+    const { notifications, unreadCount, markAllAsRead, addNotification } = useNotification();
 
     const baseLinks = [
         { path: '/marketplace', label: 'Marketplace' },
@@ -42,6 +42,17 @@ const Header: React.FC = () => {
         }
     };
     
+    const handleLogout = async () => {
+        try {
+            const message = await logout();
+            addNotification(message, 'info');
+            setProfileOpen(false);
+            setMobileMenuOpen(false);
+        } catch (error: any) {
+            addNotification(error.message, 'error');
+        }
+    };
+
     // Close dropdowns when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -117,7 +128,7 @@ const Header: React.FC = () => {
                                     <Link to="/profile" className="block px-4 py-2 text-sm text-text-primary hover:bg-gray-100" onClick={() => setProfileOpen(false)}>My Profile</Link>
                                     <Link to="/wallet" className="block px-4 py-2 text-sm text-text-primary hover:bg-gray-100" onClick={() => setProfileOpen(false)}>Wallet Settings</Link>
                                     <Link to="/transaction-history" className="block px-4 py-2 text-sm text-text-primary hover:bg-gray-100" onClick={() => setProfileOpen(false)}>History</Link>
-                                    <button onClick={() => { logout(); setProfileOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 border-t">Logout</button>
+                                    <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 border-t">Logout</button>
                                 </div>
                             </div>
                         )}
@@ -141,7 +152,7 @@ const Header: React.FC = () => {
                         ))}
                          <div className="border-t pt-4 space-y-2">
                              <Link to="/profile" className="block text-lg" onClick={() => setMobileMenuOpen(false)}>My Profile</Link>
-                             <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="w-full text-left text-lg text-red-600">Logout</button>
+                             <button onClick={handleLogout} className="w-full text-left text-lg text-red-600">Logout</button>
                          </div>
                     </nav>
                 </div>

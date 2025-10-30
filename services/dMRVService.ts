@@ -53,21 +53,26 @@ export const dMRVService = {
         totalScore += logicScore;
         
         // 4. Certificate Validation Score (Max 30)
-        // FIX: Re-structured the conditional to use a direct check. This ensures TypeScript correctly
-        // narrows the type of `certificate` to `{ mimeType: "application/pdf"; ... }` before passing it to the analysis service, resolving the type error.
-        if (certificate && certificate.mimeType === 'application/pdf') {
-            try {
-                console.log("dMRV: Sending certificate to Gemini for analysis...");
-                const certAnalysis = await geminiService.analyzeCertificate(certificate);
-                const certScore = Math.round(certAnalysis.score * (30 / 100)); // Scale to 30 max points
-                totalScore += certScore;
-                breakdown['certificateValidation'] = { score: certScore, max: 30, reason: certAnalysis.justification };
-            } catch (error: any) {
-                console.error("Certificate validation step failed:", error.message);
-                breakdown['certificateValidation'] = { score: 0, max: 30, reason: `AI analysis failed: ${error.message}` };
-            }
+        // FIX: Re-structured the logic with nested checks to ensure TypeScript correctly
+        // narrows the `certificate` type before passing it to the analysis service.
+        if (!certificate) {
+            breakdown['certificateValidation'] = { score: 0, max: 30, reason: "No certificate provided." };
         } else {
-            breakdown['certificateValidation'] = { score: 0, max: 30, reason: certificate ? "Only PDF files are accepted for certificate validation." : "No certificate provided." };
+            if (certificate.mimeType !== 'application/pdf') {
+                breakdown['certificateValidation'] = { score: 0, max: 30, reason: "Only PDF files are accepted for certificate validation." };
+            } else {
+                // By this point, TypeScript has correctly narrowed the type of `certificate`.
+                try {
+                    console.log("dMRV: Sending certificate to Gemini for analysis...");
+                    const certAnalysis = await geminiService.analyzeCertificate(certificate);
+                    const certScore = Math.round(certAnalysis.score * (30 / 100)); // Scale to 30 max points
+                    totalScore += certScore;
+                    breakdown['certificateValidation'] = { score: certScore, max: 30, reason: certAnalysis.justification };
+                } catch (error: any) {
+                    console.error("Certificate validation step failed:", error.message);
+                    breakdown['certificateValidation'] = { score: 0, max: 30, reason: `AI analysis failed: ${error.message}` };
+                }
+            }
         }
 
 

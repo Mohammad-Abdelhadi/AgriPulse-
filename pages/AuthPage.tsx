@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { AppRole } from '../types';
 import { Link } from 'react-router-dom';
+import { useNotification } from '../contexts/NotificationContext';
 
 type AuthView = 'role_select' | 'signup_form' | 'login_form';
 
@@ -11,13 +12,20 @@ const AuthPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const { login, signup, loading } = useAuth();
+    const { addNotification } = useNotification();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (view === 'login_form') {
-            login(email, password);
-        } else if (view === 'signup_form') {
-            signup(email, password, selectedRole);
+        try {
+            if (view === 'login_form') {
+                const message = await login(email, password);
+                addNotification(message, 'success');
+            } else if (view === 'signup_form') {
+                const message = await signup(email, password, selectedRole);
+                addNotification(message, 'success');
+            }
+        } catch (error: any) {
+            addNotification(error.message, 'error');
         }
     };
 

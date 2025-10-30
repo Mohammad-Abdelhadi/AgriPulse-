@@ -1,15 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AppRole, CompanyProfile } from '../types';
-import { useNotification } from './NotificationContext';
 
 interface AuthContextType {
     user: User | null;
     loading: boolean;
-    login: (email: string, pass: string) => void;
-    signup: (email: string, pass: string, role: AppRole, companyProfile?: CompanyProfile) => void;
-    logout: () => void;
-    updateUserWallet: (hederaAccountId: string, hederaPrivateKey: string) => void;
-    updateCompanyProfile: (profile: CompanyProfile) => void;
+    login: (email: string, pass: string) => Promise<string>;
+    signup: (email: string, pass: string, role: AppRole, companyProfile?: CompanyProfile) => Promise<string>;
+    logout: () => Promise<string>;
+    updateUserWallet: (hederaAccountId: string, hederaPrivateKey: string) => Promise<string>;
+    updateCompanyProfile: (profile: CompanyProfile) => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,7 +57,6 @@ const setupInitialUsers = () => {
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
-    const { addNotification } = useNotification();
 
     useEffect(() => {
         try {
@@ -75,62 +73,66 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     }, []);
 
-    const login = (email: string, pass: string) => {
+    const login = async (email: string, pass: string): Promise<string> => {
         setLoading(true);
-        const storedUsers = JSON.parse(localStorage.getItem('agripulse_users') || '{}');
-        const userFromStorage = storedUsers[email];
+        try {
+            const storedUsers = JSON.parse(localStorage.getItem('agripulse_users') || '{}');
+            const userFromStorage = storedUsers[email];
 
-        if (userFromStorage && userFromStorage.password === pass) {
-            const { password, ...userWithoutPassword } = userFromStorage;
-            const loggedInUser = userWithoutPassword as User;
-            setUser(loggedInUser);
-            localStorage.setItem('agripulse_user', JSON.stringify(loggedInUser));
-            addNotification(`Welcome back, ${email}!`, 'success');
-        } else if (userFromStorage) {
-            addNotification('Incorrect password. Please try again.', 'error');
-        } else {
-            addNotification('User not found. Please sign up.', 'error');
-        }
-        setLoading(false);
-    };
-
-    const signup = (email: string, pass: string, role: AppRole, companyProfile?: CompanyProfile) => {
-        setLoading(true);
-        const storedUsers = JSON.parse(localStorage.getItem('agripulse_users') || '{}');
-        if (storedUsers[email]) {
-            addNotification('User with this email already exists.', 'error');
+            if (userFromStorage && userFromStorage.password === pass) {
+                const { password, ...userWithoutPassword } = userFromStorage;
+                const loggedInUser = userWithoutPassword as User;
+                setUser(loggedInUser);
+                localStorage.setItem('agripulse_user', JSON.stringify(loggedInUser));
+                return `Welcome back, ${email}!`;
+            } else if (userFromStorage) {
+                throw new Error('Incorrect password. Please try again.');
+            } else {
+                throw new Error('User not found. Please sign up.');
+            }
+        } finally {
             setLoading(false);
-            return;
         }
-
-        const newUser: User = {
-            id: `user_${Date.now()}`,
-            email,
-            role,
-            ...(role === AppRole.INVESTOR && companyProfile && { companyProfile }),
-        };
-
-        const userWithPassword = {
-            ...newUser,
-            password: pass,
-        };
-        
-        storedUsers[email] = userWithPassword;
-        localStorage.setItem('agripulse_users', JSON.stringify(storedUsers));
-        localStorage.setItem('agripulse_user', JSON.stringify(newUser));
-        setUser(newUser);
-        addNotification('Account created successfully!', 'success');
-        setLoading(false);
     };
 
-    const logout = () => {
+    const signup = async (email: string, pass: string, role: AppRole, companyProfile?: CompanyProfile): Promise<string> => {
+        setLoading(true);
+        try {
+            const storedUsers = JSON.parse(localStorage.getItem('agripulse_users') || '{}');
+            if (storedUsers[email]) {
+                throw new Error('User with this email already exists.');
+            }
+
+            const newUser: User = {
+                id: `user_${Date.now()}`,
+                email,
+                role,
+                ...(role === AppRole.INVESTOR && companyProfile && { companyProfile }),
+            };
+
+            const userWithPassword = {
+                ...newUser,
+                password: pass,
+            };
+            
+            storedUsers[email] = userWithPassword;
+            localStorage.setItem('agripulse_users', JSON.stringify(storedUsers));
+            localStorage.setItem('agripulse_user', JSON.stringify(newUser));
+            setUser(newUser);
+            return 'Account created successfully!';
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const logout = async (): Promise<string> => {
         setUser(null);
         localStorage.removeItem('agripulse_user');
-        addNotification("You've been logged out.", 'info');
+        return "You've been logged out.";
     };
     
-    const updateUserWallet = (hederaAccountId: string, hederaPrivateKey: string) => {
-        if (!user) return;
+    const updateUserWallet = async (hederaAccountId: string, hederaPrivateKey: string): Promise<string> => {
+        if (!user) throw new Error("User not authenticated.");
         
         const updatedUser = { ...user, hederaAccountId, hederaPrivateKey };
         setUser(updatedUser);
@@ -140,11 +142,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         storedUsers[user.email] = { ...storedUsers[user.email], ...updatedUser };
         localStorage.setItem('agripulse_users', JSON.stringify(storedUsers));
         
-        addNotification('Wallet information saved successfully!', 'success');
+        return 'Wallet information saved successfully!';
     };
 
-    const updateCompanyProfile = (profile: CompanyProfile) => {
-        if (!user || user.role !== AppRole.INVESTOR) return;
+    const updateCompanyProfile = async (profile: CompanyProfile): Promise<string> => {
+        if (!user || user.role !== AppRole.INVESTOR) {
+            throw new Error("User is not an investor.");
+        }
 
         const updatedUser = { ...user, companyProfile: profile };
         setUser(updatedUser);
@@ -154,7 +158,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         storedUsers[user.email] = { ...storedUsers[user.email], ...updatedUser };
         localStorage.setItem('agripulse_users', JSON.stringify(storedUsers));
         
-        addNotification('Company profile updated successfully!', 'success');
+        return 'Company profile updated successfully!';
     };
 
     return (

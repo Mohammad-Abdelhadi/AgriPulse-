@@ -19,20 +19,21 @@ import LandingPage from './pages/LandingPage';
 import OurProcessPage from './pages/OurProcessPage';
 import AppLayout from './components/AppLayout';
 import ProfilePage from './pages/ProfilePage';
+import AdminProcessPage from './pages/AdminProcessPage';
 
 
 const App: React.FC = () => {
   return (
-    <NotificationProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <NotificationProvider>
         <FarmProvider>
           <HashRouter>
             <AppRoutes />
             <ToastContainer />
           </HashRouter>
         </FarmProvider>
-      </AuthProvider>
-    </NotificationProvider>
+      </NotificationProvider>
+    </AuthProvider>
   );
 };
 
@@ -49,6 +50,7 @@ const AppRoutes: React.FC = () => {
             {/* Publicly accessible routes */}
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/our-process" element={<OurProcessPage />} />
+            <Route path="/admin-process" element={<AdminProcessPage />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/marketplace" />} />
 

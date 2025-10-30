@@ -96,10 +96,15 @@ const InvestorDashboard: React.FC = () => {
         setRetireAmount(1);
     };
     
-    const handleProfileUpdate = (e: React.FormEvent) => {
+    const handleProfileUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
-        updateCompanyProfile(companyProfile);
-        setIsProfileModalOpen(false);
+        try {
+            const message = await updateCompanyProfile(companyProfile);
+            showToast(message, 'success');
+            setIsProfileModalOpen(false);
+        } catch (error: any) {
+            showToast(error.message, 'error');
+        }
     };
 
     const getRarityStyles = (rarity: NftRarity) => {

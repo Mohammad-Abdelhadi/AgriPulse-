@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { Notification, NotificationType, NotificationContextType } from '../types';
+import { useAuth } from './AuthContext';
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
@@ -7,23 +8,45 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 let toastIdCounter = 0;
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [toasts, setToasts] = useState<Notification[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Effect to load/clear notifications on user change
   useEffect(() => {
-    const storedNotifications = localStorage.getItem('agripulse_notifications');
-    if (storedNotifications) {
-      const parsed = JSON.parse(storedNotifications);
-      setNotifications(parsed);
-      setUnreadCount(parsed.filter((n: Notification) => !n.read).length);
+    if (user) {
+      const storageKey = `agripulse_notifications_${user.id}`;
+      const storedNotifications = localStorage.getItem(storageKey);
+      if (storedNotifications) {
+        try {
+          const parsed = JSON.parse(storedNotifications);
+          setNotifications(parsed);
+          setUnreadCount(parsed.filter((n: Notification) => !n.read).length);
+        } catch (e) {
+          console.error("Failed to parse notifications, resetting.", e);
+          setNotifications([]);
+          setUnreadCount(0);
+        }
+      } else {
+        setNotifications([]); // No notifications for this user yet
+        setUnreadCount(0);
+      }
+    } else {
+      // User logged out, clear notifications from state
+      setNotifications([]);
+      setUnreadCount(0);
     }
-  }, []);
+  }, [user]);
 
+  // Effect to save notifications when they change for the current user
   useEffect(() => {
-    localStorage.setItem('agripulse_notifications', JSON.stringify(notifications));
-    setUnreadCount(notifications.filter(n => !n.read).length);
-  }, [notifications]);
+    if (user) {
+      const storageKey = `agripulse_notifications_${user.id}`;
+      localStorage.setItem(storageKey, JSON.stringify(notifications));
+      setUnreadCount(notifications.filter(n => !n.read).length);
+    }
+  }, [notifications, user]);
 
   const removeToast = useCallback((id: number) => {
     setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
@@ -39,8 +62,11 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       timestamp: Date.now()
     };
     setToasts((prev) => [...prev, newNotification]);
-    setNotifications((prev) => [newNotification, ...prev]);
-  }, []);
+    // Only add to persistent notifications if a user is logged in
+    if (user) {
+        setNotifications((prev) => [newNotification, ...prev]);
+    }
+  }, [user]);
 
   const markAsRead = (id: number) => {
     setNotifications(prev =>
