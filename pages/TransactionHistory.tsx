@@ -4,7 +4,7 @@ import { useFarm } from '../contexts/FarmContext';
 import { AppRole } from '../types';
 import { FARMER_LEGACY_LEVELS, INVESTOR_IMPACT_LEVELS } from '../constants';
 
-type TransactionType = 'Credit Purchase' | 'NFT Mint' | 'Credit Retirement';
+type TransactionType = 'Credit Purchase' | 'NFT Mint' | 'Credit Retirement' | 'Credit Sale';
 
 interface TransactionItem {
   id: string;
@@ -20,6 +20,10 @@ const ICONS: Record<TransactionType, { component: React.ReactNode, bgColor: stri
     'Credit Purchase': {
         component: <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>,
         bgColor: 'bg-blue-100'
+    },
+    'Credit Sale': {
+        component: <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01M12 6V5m-5 7h10M12 21a9 9 0 110-18 9 9 0 010 18z"></path></svg>,
+        bgColor: 'bg-green-100'
     },
     'NFT Mint': {
         component: <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>,
@@ -77,6 +81,17 @@ const TransactionHistory: React.FC = () => {
         }
 
         if (user.role === AppRole.FARMER) {
+            const myFarmIds = new Set(farms.filter(f => f.farmerId === user.id).map(f => f.id));
+            
+            purchases.filter(p => myFarmIds.has(p.farmId)).forEach(p => {
+                items.push({
+                    id: `s-${p.id}`, date: p.purchaseDate, type: 'Credit Sale',
+                    description: `Sold to ${p.investorEmail}`,
+                    details: `${p.tonsPurchased.toLocaleString()} CO₂e credits sold for ~$${p.totalPrice.toFixed(2)}`,
+                    actions: [{ label: 'View Sale Transaction', url: p.hashscanUrl }]
+                });
+            });
+
             farmerNfts.filter(n => n.farmerId === user.id).forEach(n => {
                 const level = FARMER_LEGACY_LEVELS.find(l => l.id === n.nftLevelId);
                 items.push({

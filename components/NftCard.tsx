@@ -13,18 +13,57 @@ interface NftCardProps {
     rarity: NftRarity;
     rarityStyles: { border: string; bg: string; text: string };
     onVerify: () => void;
+    showImage?: boolean;
 }
 
-const ipfsToGateway = (ipfsUrl: string) => {
-    if (!ipfsUrl || !ipfsUrl.startsWith('ipfs://')) {
-        return '';
+// A list of public IPFS gateways to try in order of preference for resilience.
+const IPFS_GATEWAYS = [
+    'https://cloudflare-ipfs.com/ipfs/',
+    'https://gateway.pinata.cloud/ipfs/',
+    'https://ipfs.io/ipfs/',
+    'https://dweb.link/ipfs/',
+];
+
+/**
+ * Fetches a file from IPFS using a CID, trying multiple public gateways for resilience.
+ * Implements an exponential backoff retry mechanism if all gateways fail.
+ * @param cid The IPFS Content Identifier (CID).
+ * @param retries The number of times to retry the entire loop of gateways.
+ * @param delay The initial delay between retry attempts in milliseconds.
+ * @returns A Promise that resolves to the fetch Response.
+ */
+const fetchWithRetry = async (cid: string, retries = 3, delay = 1000): Promise<Response> => {
+    for (let attempt = 0; attempt < retries; attempt++) {
+        for (const gateway of IPFS_GATEWAYS) {
+            const url = `${gateway}${cid}`;
+            try {
+                // Use AbortController for fetch timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout per gateway
+                
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    console.log(`Successfully fetched from ${url}`);
+                    return response;
+                }
+                console.warn(`Attempt ${attempt + 1} failed for gateway ${gateway}: ${response.status} ${response.statusText}`);
+            } catch (error) {
+                console.warn(`Attempt ${attempt + 1} failed for gateway ${gateway} with network error:`, error);
+            }
+        }
+        if (attempt < retries - 1) {
+            const backoffDelay = delay * Math.pow(2, attempt);
+            console.log(`All gateways failed. Retrying in ${backoffDelay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, backoffDelay));
+        }
     }
-    const cid = ipfsUrl.substring(7);
-    // FIX: Switched to a more permissive public IPFS gateway to resolve CORS issues.
-    return `https://ipfs.io/ipfs/${cid}`;
+    throw new Error(`Failed to fetch from all IPFS gateways after ${retries} attempts.`);
 };
 
-const NftCard: React.FC<NftCardProps> = ({ metadataUrl, rarity, rarityStyles, onVerify }) => {
+
+const NftCard: React.FC<NftCardProps> = ({ metadataUrl, rarity, rarityStyles, onVerify, showImage = true }) => {
     const [metadata, setMetadata] = useState<NftMetadata | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -40,16 +79,23 @@ const NftCard: React.FC<NftCardProps> = ({ metadataUrl, rarity, rarityStyles, on
             setLoading(true);
             setError(null);
             try {
-                const gatewayUrl = ipfsToGateway(metadataUrl);
-                const response = await fetch(gatewayUrl);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch from IPFS gateway: ${response.statusText}`);
+                if (!metadataUrl.startsWith('ipfs://')) {
+                    throw new Error("Invalid IPFS URL format. Expected 'ipfs://...'");
                 }
+                const cid = metadataUrl.substring(7);
+                
+                const response = await fetchWithRetry(cid);
                 const data: NftMetadata = await response.json();
+                
+                // If the image URL within the metadata is also an IPFS link, convert it using the first (primary) gateway.
+                if (data.image && data.image.startsWith('ipfs://')) {
+                    const imageCid = data.image.substring(7);
+                    data.image = `${IPFS_GATEWAYS[0]}${imageCid}`;
+                }
                 setMetadata(data);
             } catch (err: any) {
                 console.error("Failed to fetch or parse NFT metadata from IPFS:", err);
-                setError("Could not load NFT details.");
+                setError(err.message || "Could not load NFT details.");
             } finally {
                 setLoading(false);
             }
@@ -84,7 +130,13 @@ const NftCard: React.FC<NftCardProps> = ({ metadataUrl, rarity, rarityStyles, on
     return (
         <div className={`bg-white rounded-xl shadow-lg overflow-hidden border-2 ${rarityStyles.border} ${rarityStyles.bg} flex flex-col`}>
             <div className="p-6 flex-grow flex flex-col">
-                <img src={metadata.image} alt={metadata.name} className="w-full h-48 object-cover rounded-lg mb-4 shadow-md"/>
+                {showImage ? (
+                    <img src={metadata.image} alt={metadata.name} className="w-full h-48 object-cover rounded-lg mb-4 shadow-md"/>
+                ) : (
+                    <div className="w-full h-48 flex items-center justify-center bg-gray-100 rounded-lg mb-4 shadow-inner">
+                        <svg className="w-24 h-24 text-primary opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                    </div>
+                )}
                 <div className="flex justify-between items-start">
                     <h3 className="text-xl font-bold text-primary">{metadata.name}</h3>
                     <span className={`px-3 py-1 text-sm font-bold rounded-full border-2 ${rarityStyles.border} ${rarityStyles.text}`}>{rarity}</span>

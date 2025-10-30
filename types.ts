@@ -1,10 +1,15 @@
-
-
 export enum AppRole {
     FARMER = 'FARMER',
     INVESTOR = 'INVESTOR',
     ADMIN = 'ADMIN',
     SERVICE_PROVIDER = 'SERVICE_PROVIDER',
+}
+
+export interface CompanyProfile {
+    name: string;
+    location: string;
+    industry: string;
+    annualCarbonFootprint: number;
 }
 
 export interface User {
@@ -13,6 +18,7 @@ export interface User {
     role: AppRole;
     hederaAccountId?: string;
     hederaPrivateKey?: string;
+    companyProfile?: CompanyProfile;
 }
 
 export enum FarmStatus {
@@ -47,12 +53,15 @@ export interface Farm {
     farmNftTokenId?: string;
     farmNftSerialNumber?: number;
     farmNftHashscanUrl?: string;
+    farmNftMetadataUrl?: string; // URL to the rich IPFS metadata for the farm NFT
+    hcsLog?: string; // URL to the HCS transaction receipt for verification
 }
 
 export interface Purchase {
     id: string;
     farmId: string;
     investorId: string;
+    investorEmail: string; // Added to enable farmer transaction history
     tonsPurchased: number;
     totalPrice: number;
     purchaseDate: string;
@@ -130,6 +139,7 @@ export interface PlatformTokenInfo {
   name: string;
   symbol: string;
   initialSupply: number;
+  totalSupply: number; // Added to track the dynamic total supply after minting
 }
 
 export interface NftCollectionInfo {
@@ -163,6 +173,22 @@ export interface Service {
     priceUnit: 'per hour' | 'per day' | 'per item';
 }
 
+export interface PlatformInitializationDetails {
+    tokenName: string;
+    tokenSymbol: string;
+    initialSupply: number;
+    farmerNftName: string;
+    farmerNftSymbol: string;
+    farmerNftDescription: string;
+    investorNftName: string;
+    investorNftSymbol: string;
+    investorNftDescription: string;
+    farmNftName: string;
+    farmNftSymbol: string;
+    farmNftDescription: string;
+    hcsTopicId: string; // Added for the HCS audit trail
+}
+
 export interface FarmContextType {
     farms: Farm[];
     purchases: Purchase[];
@@ -174,18 +200,22 @@ export interface FarmContextType {
     farmerNftCollectionInfo: NftCollectionInfo | null;
     investorNftCollectionInfo: NftCollectionInfo | null;
     farmNftCollectionInfo: NftCollectionInfo | null;
+    hcsTopicId: string | null; // Added for HCS audit trail
     loading: boolean;
     error: string | null;
     hbarToUsdRate: number;
-    registerFarm: (farmData: Omit<Farm, 'id' | 'farmerId' | 'farmerName' | 'farmerHederaAccountId' | 'totalTons' | 'availableTons' | 'status' | 'investorCount'>) => Promise<boolean>;
+    userBalance: { hbar: number, tokens: { tokenId: string, balance: number }[] } | null;
+    refreshUserBalance: () => Promise<void>;
+    registerFarm: (farmData: Omit<Farm, 'id' | 'farmerId' | 'farmerName' | 'farmerHederaAccountId' | 'totalTons' | 'availableTons' | 'status' | 'investorCount'>) => Promise<Farm | null>;
     purchaseCredits: (farmId: string, tons: number) => Promise<void>;
     createPlatformToken: (name: string, symbol: string, initialSupply: number) => Promise<void>;
-    associateWithPlatformToken: () => Promise<void>;
+    associateWithPlatformToken: () => Promise<boolean>;
     createFarmerNftCollection: (name: string, symbol: string, description: string) => Promise<void>;
-    associateWithFarmerNftCollection: () => Promise<void>;
+    associateWithFarmerNftCollection: () => Promise<boolean>;
     createInvestorNftCollection: (name: string, symbol: string, description: string) => Promise<void>;
-    associateWithInvestorNftCollection: () => Promise<void>;
+    associateWithInvestorNftCollection: () => Promise<boolean>;
     createFarmNftCollection: (name: string, symbol: string, description: string) => Promise<void>;
+    initializePlatform: (details: Omit<PlatformInitializationDetails, 'hcsTopicId'>) => Promise<void>;
     retireCredits: (amount: number) => Promise<void>;
     addService: (serviceData: Omit<Service, 'id' | 'providerId'>) => Promise<boolean>;
     deletePlatformToken: () => Promise<void>;

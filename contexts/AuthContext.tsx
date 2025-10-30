@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, AppRole } from '../types';
+import { User, AppRole, CompanyProfile } from '../types';
 import { useToast } from './ToastContext';
 
 interface AuthContextType {
     user: User | null;
     loading: boolean;
     login: (email: string, pass: string) => void;
-    signup: (email: string, pass: string, role: AppRole) => void;
+    signup: (email: string, pass: string, role: AppRole, companyProfile?: CompanyProfile) => void;
     logout: () => void;
     updateUserWallet: (hederaAccountId: string, hederaPrivateKey: string) => void;
+    updateCompanyProfile: (profile: CompanyProfile) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,7 +30,13 @@ const setupInitialUsers = () => {
                 email: 'inv@inv.com',
                 role: AppRole.INVESTOR,
                 hederaAccountId: '0.0.7085970',
-                hederaPrivateKey: '302e020100300506032b6570042204206c23a08e9dc11cbb48eacd1a9071883f601a0ccc18845956ad67f4e3a95c7742'
+                hederaPrivateKey: '302e020100300506032b6570042204206c23a08e9dc11cbb48eacd1a9071883f601a0ccc18845956ad67f4e3a95c7742',
+                companyProfile: {
+                    name: 'GreenShift Ventures',
+                    location: 'Dubai, UAE',
+                    industry: 'Impact Investment & ESG',
+                    annualCarbonFootprint: 7500
+                }
             },
             'farmer@farm.com': {
                 id: 'user_farmer',
@@ -80,7 +87,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setLoading(false);
     };
 
-    const signup = (email: string, pass: string, role: AppRole) => {
+    const signup = (email: string, pass: string, role: AppRole, companyProfile?: CompanyProfile) => {
         setLoading(true);
         const storedUsers = JSON.parse(localStorage.getItem('agripulse_users') || '{}');
         if (storedUsers[email]) {
@@ -93,6 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             id: `user_${Date.now()}`,
             email,
             role,
+            ...(role === AppRole.INVESTOR && companyProfile && { companyProfile }),
         };
         
         storedUsers[email] = newUser;
@@ -108,7 +116,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.removeItem('agripulse_user');
         showToast("You've been logged out.", 'info');
     };
-
+    
     const updateUserWallet = (hederaAccountId: string, hederaPrivateKey: string) => {
         if (!user) return;
         
@@ -123,8 +131,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         showToast('Wallet information saved successfully!', 'success');
     };
 
+    const updateCompanyProfile = (profile: CompanyProfile) => {
+        if (!user || user.role !== AppRole.INVESTOR) return;
+
+        const updatedUser = { ...user, companyProfile: profile };
+        setUser(updatedUser);
+        localStorage.setItem('agripulse_user', JSON.stringify(updatedUser));
+        
+        const storedUsers = JSON.parse(localStorage.getItem('agripulse_users') || '{}');
+        storedUsers[user.email] = updatedUser;
+        localStorage.setItem('agripulse_users', JSON.stringify(storedUsers));
+        
+        showToast('Company profile updated successfully!', 'success');
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, signup, logout, updateUserWallet }}>
+        <AuthContext.Provider value={{ user, loading, login, signup, logout, updateUserWallet, updateCompanyProfile }}>
             {children}
         </AuthContext.Provider>
     );

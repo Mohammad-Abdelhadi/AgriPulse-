@@ -1,4 +1,3 @@
-
 import * as hederasdk from '@hashgraph/sdk';
 
 type HederaEntityType = 'transaction' | 'token' | 'account' | 'contract' | 'topic';
@@ -9,7 +8,6 @@ class HederaService {
         let displayId: string;
 
         if (type === 'transaction' && id instanceof hederasdk.TransactionId) {
-            // FIX: Use the SDK's toString() method for both display and the URL identifier
             displayId = id.toString();
             identifier = id.toString();
         } else {
@@ -26,7 +24,6 @@ class HederaService {
         console.log('Hedera Entity Referenced:', JSON.stringify(output, null, 2));
     }
     
-    // FIX: Refactored to use the correct `toString()` method from the SDK, which generates the `account@timestamp` format.
     private formatTxIdForUrl(txId: hederasdk.TransactionId): string {
         return txId.toString();
     }
@@ -49,37 +46,29 @@ class HederaService {
             const investorPrivateKey = hederasdk.PrivateKey.fromString(investorPrivateKeyString);
             const adminPrivateKey = hederasdk.PrivateKey.fromString(adminPrivateKeyString);
     
-            // Calculate commission using BigInt for precision
             const totalAmount = BigInt(hbarAmountInTinybars);
-            const commission = (totalAmount * 2n) / 100n; // 2% commission
+            // Calculate 5% platform commission using BigInt arithmetic for precision.
+            const commission = (totalAmount * 5n) / 100n; 
             const farmerShare = totalAmount - commission;
 
             console.log(`--- Atomic Swap Breakdown ---`);
             console.log(`Total HBAR from Investor: ${totalAmount.toString()} tinybars`);
-            console.log(`Platform Commission (2%): ${commission.toString()} tinybars -> to Admin Account ${adminAccountId}`);
-            console.log(`Farmer's Share (98%): ${farmerShare.toString()} tinybars -> to Farmer Account ${farmerAccountId}`);
+            console.log(`Platform Commission (5%): ${commission.toString()} tinybars -> to Admin Account ${adminAccountId}`);
+            console.log(`Farmer's Share (95%): ${farmerShare.toString()} tinybars -> to Farmer Account ${farmerAccountId}`);
             console.log(`Token Transfer: ${tokenAmount} of ${tokenId} from Admin ${adminAccountId} to Investor ${investorAccountId}`);
             console.log(`-----------------------------`);
 
             const transaction = new hederasdk.TransferTransaction()
-                // HBAR Transfers (must sum to 0)
                 .addHbarTransfer(investorAccountId, hederasdk.Hbar.fromTinybars(totalAmount).negated())
                 .addHbarTransfer(farmerAccountId, hederasdk.Hbar.fromTinybars(farmerShare))
-                .addHbarTransfer(adminAccountId, hederasdk.Hbar.fromTinybars(commission)) // Commission transfer
-                // Token Transfers (must sum to 0)
+                .addHbarTransfer(adminAccountId, hederasdk.Hbar.fromTinybars(commission))
                 .addTokenTransfer(tokenId, adminAccountId, -tokenAmount)
                 .addTokenTransfer(tokenId, investorAccountId, tokenAmount);
     
-            // The investor will pay the transaction fee.
             client.setOperator(investorAccountId, investorPrivateKey);
     
-            // Freeze the transaction
             const frozenTx = await transaction.freezeWith(client);
-            
-            // Sign with the admin's key, as their tokens are being transferred out.
             const adminSignedTx = await frozenTx.sign(adminPrivateKey);
-    
-            // Execute the transaction. The client's operator (investor) will also sign it automatically.
             const txResponse = await adminSignedTx.execute(client);
     
             await txResponse.getReceipt(client);
@@ -89,7 +78,9 @@ class HederaService {
             return { hashscanUrl: `https://hashscan.io/testnet/transaction/${this.formatTxIdForUrl(txResponse.transactionId)}` };
         } catch (err: any) {
             console.error("Error executing atomic swap:", err);
-            if (err.message?.includes('INSUFFICIENT_ACCOUNT_BALANCE')) { throw new Error('Investor account has insufficient HBAR for this purchase.'); }
+            if (err.message?.includes('INSUFFICIENT_PAYER_BALANCE') || err.message?.includes('INSUFFICIENT_ACCOUNT_BALANCE')) { 
+                throw new Error('You do not have enough HBAR to complete this purchase.'); 
+            }
             if (err.message?.includes('INSUFFICIENT_TOKEN_BALANCE')) { throw new Error('The treasury has an insufficient token balance for this purchase.'); }
             if (err.message?.includes('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT')) { throw new Error('Investor must associate with the token first.'); }
             if (err.message?.includes('Invalid private key')) { throw new Error('An invalid private key was provided for the swap.'); }
@@ -124,7 +115,7 @@ class HederaService {
                 .setTreasuryAccountId(adminAccountId)
                 .setAdminKey(privateKey)
                 .setSupplyKey(privateKey)
-                .setWipeKey(privateKey) // Added Wipe Key for retirement
+                .setWipeKey(privateKey)
                 .freezeWith(client);
 
             const signTx = await transaction.sign(privateKey);
@@ -152,42 +143,39 @@ class HederaService {
         }
     }
 
-    async transferHbar(
-        senderAccountId: string,
-        senderPrivateKey: string,
-        recipientAccountId: string,
-        amountInTinybars: number
-    ): Promise<{ transactionId: string, hashscanUrl: string }> {
-        console.log(`Attempting to transfer ${amountInTinybars} tinybars from ${senderAccountId} to ${recipientAccountId}`);
+    async mintFungibleTokens(tokenId: string, amount: number, adminAccountId: string, adminPrivateKeyString: string): Promise<{ newTotalSupply: number, hashscanUrl: string }> {
+        console.log(`Attempting to MINT ${amount} of token ${tokenId}`);
         try {
             const client = hederasdk.Client.forTestnet();
-            const privateKey = hederasdk.PrivateKey.fromString(senderPrivateKey);
-            client.setOperator(senderAccountId, privateKey);
-            
-            const transferAmount = hederasdk.Hbar.fromTinybars(amountInTinybars);
+            const privateKey = hederasdk.PrivateKey.fromString(adminPrivateKeyString);
+            client.setOperator(adminAccountId, privateKey);
 
-            const transaction = await new hederasdk.TransferTransaction()
-                .addHbarTransfer(senderAccountId, transferAmount.negated())
-                .addHbarTransfer(recipientAccountId, transferAmount)
+            const transaction = await new hederasdk.TokenMintTransaction()
+                .setTokenId(tokenId)
+                .setAmount(amount)
                 .freezeWith(client);
-
+            
             const signTx = await transaction.sign(privateKey);
             const txResponse = await signTx.execute(client);
+            const receipt = await txResponse.getReceipt(client);
             
-            this.logHederaEntity('account', senderAccountId);
-            this.logHederaEntity('account', recipientAccountId);
             this.logHederaEntity('transaction', txResponse.transactionId);
 
-            console.log(`HBAR transfer successful. Transaction ID: ${txResponse.transactionId.toString()}`);
-            return {
-                transactionId: txResponse.transactionId.toString(),
-                hashscanUrl: `https://hashscan.io/testnet/transaction/${this.formatTxIdForUrl(txResponse.transactionId)}`
+            const newTotalSupply = receipt.totalSupply?.toNumber();
+            if (newTotalSupply === undefined) {
+                 throw new Error("Mint receipt did not return a new total supply.");
+            }
+
+            console.log(`Mint successful. New total supply: ${newTotalSupply}`);
+            return { 
+                newTotalSupply: newTotalSupply,
+                hashscanUrl: `https://hashscan.io/testnet/transaction/${this.formatTxIdForUrl(txResponse.transactionId)}` 
             };
         } catch (err: any) {
-            console.error("Error transferring HBAR:", err);
-            if (err.message?.includes('INSUFFICIENT_ACCOUNT_BALANCE')) { throw new Error('Your account has insufficient HBAR for this purchase.'); }
-            if (err.message?.includes('Invalid private key')) { throw new Error('The provided private key is invalid.'); }
-            throw new Error(err.message || "An error occurred during the HBAR transfer.");
+            console.error("Error minting tokens:", err);
+            if (err.message?.includes('TOKEN_HAS_NO_SUPPLY_KEY')) { throw new Error('The token was not created with a Supply Key, so tokens cannot be minted.'); }
+            if (err.message?.includes('Invalid private key')) { throw new Error('The provided admin private key is invalid for minting.'); }
+            throw new Error(err.message || "An error occurred during token minting.");
         }
     }
     
@@ -224,44 +212,6 @@ class HederaService {
         }
     }
 
-    async transferFungibleTokens(
-        senderAccountId: string,
-        senderPrivateKeyString: string,
-        recipientAccountId: string,
-        tokenId: string,
-        amount: number
-    ): Promise<{ hashscanUrl: string }> {
-         console.log(`Attempting to transfer ${amount} of token ${tokenId} from ${senderAccountId} to ${recipientAccountId}`);
-         try {
-            const client = hederasdk.Client.forTestnet();
-            const privateKey = hederasdk.PrivateKey.fromString(senderPrivateKeyString);
-            client.setOperator(senderAccountId, privateKey);
-
-            const transaction = await new hederasdk.TransferTransaction()
-                .addTokenTransfer(tokenId, senderAccountId, -amount)
-                .addTokenTransfer(tokenId, recipientAccountId, amount)
-                .freezeWith(client);
-
-            const signTx = await transaction.sign(privateKey);
-            const txResponse = await signTx.execute(client);
-            await txResponse.getReceipt(client);
-            
-            this.logHederaEntity('account', senderAccountId);
-            this.logHederaEntity('account', recipientAccountId);
-            this.logHederaEntity('token', tokenId);
-            this.logHederaEntity('transaction', txResponse.transactionId);
-
-            console.log(`Token transfer successful. Transaction ID: ${txResponse.transactionId.toString()}`);
-            return { hashscanUrl: `https://hashscan.io/testnet/transaction/${this.formatTxIdForUrl(txResponse.transactionId)}` };
-        } catch (err: any) {
-            console.error("Error transferring fungible tokens:", err);
-             if (err.message?.includes('INSUFFICIENT_TOKEN_BALANCE')) { throw new Error('The treasury account has an insufficient token balance.'); }
-             if (err.message?.includes('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT')) { throw new Error(`The recipient (${recipientAccountId}) must associate with the token first.`); }
-             if (err.message?.includes('Invalid private key')) { throw new Error('The provided private key is invalid.'); }
-            throw new Error(err.message || "An error occurred during the token transfer.");
-        }
-    }
-
     async createRealNftCollection(name: string, symbol: string, memo: string, adminAccountId: string, adminPrivateKey: string): Promise<{ tokenId: string, hashscanUrl: string }> {
         console.log("Attempting to create a real NFT collection with metadata...");
         const client = hederasdk.Client.forTestnet();
@@ -271,7 +221,6 @@ class HederaService {
         let tokenId: hederasdk.TokenId;
     
         try {
-            // Step 1: Create the token
             const createTx = await new hederasdk.TokenCreateTransaction()
                 .setTokenName(name)
                 .setTokenSymbol(symbol)
@@ -279,9 +228,9 @@ class HederaService {
                 .setDecimals(0)
                 .setInitialSupply(0)
                 .setTreasuryAccountId(adminAccountId)
-                .setAdminKey(privateKey) // Admin key is crucial for updating and deleting
-                .setSupplyKey(privateKey) // Supply key is crucial for burning
-                .setWipeKey(privateKey) // Wipe key is not used for NFTs, but good practice
+                .setAdminKey(privateKey)
+                .setSupplyKey(privateKey)
+                .setWipeKey(privateKey)
                 .freezeWith(client);
     
             const signedCreateTx = await createTx.sign(privateKey);
@@ -293,8 +242,6 @@ class HederaService {
             this.logHederaEntity('token', tokenId.toString());
             console.log(`Token created successfully: ${tokenId.toString()}`);
     
-            // Step 2: Update the token with the memo
-            console.log(`Updating token ${tokenId.toString()} with memo...`);
             const updateTx = await new hederasdk.TokenUpdateTransaction()
                 .setTokenId(tokenId)
                 .setTokenMemo(memo)
@@ -381,36 +328,7 @@ class HederaService {
             throw new Error(err.message || "An error occurred during token retirement.");
         }
     }
-    
-    async burnNft(tokenId: string, serialNumber: number, adminAccountId: string, adminPrivateKeyString: string): Promise<{ hashscanUrl: string }> {
-        console.log(`Attempting to BURN NFT serial ${serialNumber} from token ${tokenId}`);
-        try {
-            const client = hederasdk.Client.forTestnet();
-            const privateKey = hederasdk.PrivateKey.fromString(adminPrivateKeyString);
-            client.setOperator(adminAccountId, privateKey);
-    
-            const transaction = await new hederasdk.TokenBurnTransaction()
-                .setTokenId(tokenId)
-                .setSerials([serialNumber])
-                .freezeWith(client);
-    
-            const signTx = await transaction.sign(privateKey);
-            const txResponse = await signTx.execute(client);
-            await txResponse.getReceipt(client);
-    
-            this.logHederaEntity('token', tokenId);
-            this.logHederaEntity('transaction', txResponse.transactionId);
-    
-            console.log(`Burn successful. Transaction ID: ${txResponse.transactionId.toString()}`);
-            return { hashscanUrl: `https://hashscan.io/testnet/transaction/${this.formatTxIdForUrl(txResponse.transactionId)}` };
-        } catch (err: any) {
-            console.error("Error burning NFT:", err);
-            if (err.message?.includes('TOKEN_HAS_NO_SUPPLY_KEY')) { throw new Error('The NFT collection was not created with a Supply Key, so NFTs cannot be burned.'); }
-            if (err.message?.includes('INVALID_NFT_ID')) { throw new Error(`NFT Serial ${serialNumber} does not exist in collection ${tokenId}.`); }
-            throw new Error(err.message || "An error occurred during NFT burning.");
-        }
-    }
-    
+        
     async deleteToken(tokenId: string, adminAccountId: string, adminPrivateKeyString: string): Promise<{ hashscanUrl: string }> {
         console.log(`Attempting to DELETE token ${tokenId}`);
         try {
@@ -436,7 +354,7 @@ class HederaService {
             if (err.message?.includes('TOKEN_IS_IMMUTABLE')) { throw new Error('The token was not created with an Admin Key, so it cannot be deleted.'); }
             if (err.message?.includes('TOKEN_WAS_DELETED')) {
                 console.warn(`Token ${tokenId} was already deleted.`);
-                return { hashscanUrl: '' }; // Gracefully handle if already deleted
+                return { hashscanUrl: '' };
             }
              if (err.message?.includes('TRANSACTION_REQUIRES_ZERO_TOKEN_SUPPLY')) { throw new Error('Cannot delete token: The total supply is not in the treasury account. Wipe/burn all tokens first.'); }
             throw new Error(err.message || "An error occurred during token deletion.");
@@ -537,6 +455,76 @@ class HederaService {
         }
     }
 
+    async createHcsTopic(adminAccountId: string, adminPrivateKeyString: string, memo: string): Promise<{ topicId: string, hashscanUrl: string }> {
+        console.log("Attempting to create a new HCS topic...");
+        try {
+            const client = hederasdk.Client.forTestnet();
+            const privateKey = hederasdk.PrivateKey.fromString(adminPrivateKeyString);
+            client.setOperator(adminAccountId, privateKey);
+
+            const transaction = await new hederasdk.TopicCreateTransaction()
+                .setTopicMemo(memo)
+                .setAdminKey(privateKey) // Allows topic to be updated/deleted
+                .setSubmitKey(privateKey) // Allows admin to submit messages
+                .freezeWith(client);
+            
+            const signedTx = await transaction.sign(privateKey);
+            const txResponse = await signedTx.execute(client);
+            const receipt = await txResponse.getReceipt(client);
+
+            const topicId = receipt.topicId;
+            if (!topicId) { throw new Error("HCS Topic ID was not returned from the receipt."); }
+
+            this.logHederaEntity('topic', topicId.toString());
+            this.logHederaEntity('transaction', txResponse.transactionId);
+
+            console.log(`HCS topic created successfully: ${topicId.toString()}`);
+            return {
+                topicId: topicId.toString(),
+                hashscanUrl: `https://hashscan.io/testnet/topic/${topicId.toString()}`
+            };
+
+        } catch (err: any) {
+            console.error("Error creating HCS topic:", err);
+            throw new Error(err.message || "An error occurred during HCS topic creation.");
+        }
+    }
+
+    async submitHcsMessage(topicId: string, message: string, adminAccountId: string, adminPrivateKeyString: string): Promise<{ hashscanUrl: string }> {
+        console.log(`Submitting message to HCS topic ${topicId}`);
+        try {
+            const client = hederasdk.Client.forTestnet();
+            const privateKey = hederasdk.PrivateKey.fromString(adminPrivateKeyString);
+            client.setOperator(adminAccountId, privateKey);
+
+            const transaction = await new hederasdk.TopicMessageSubmitTransaction({
+                topicId: topicId,
+                message: message,
+            })
+            .setMaxChunks(1) // Force the message to be a single transaction, preventing chunking.
+            .freezeWith(client);
+
+            const signedTx = await transaction.sign(privateKey);
+            const txResponse = await signedTx.execute(client);
+            await txResponse.getReceipt(client);
+
+            this.logHederaEntity('topic', topicId);
+            this.logHederaEntity('transaction', txResponse.transactionId);
+
+            console.log(`Message submitted successfully to HCS topic. Transaction ID: ${txResponse.transactionId}`);
+            return {
+                hashscanUrl: `https://hashscan.io/testnet/transaction/${this.formatTxIdForUrl(txResponse.transactionId)}`
+            };
+
+        } catch (err: any) {
+            console.error("Error submitting HCS message:", err);
+            if (err.message?.includes('MESSAGE_SIZE_TOO_LARGE')) {
+                throw new Error("HCS submission failed: The verification message is too large for a single transaction even after truncation. Please shorten farm details.");
+            }
+            throw new Error(err.message || "An error occurred while submitting HCS message.");
+        }
+    }
+
 
     // --- REAL READ OPERATIONS ---
 
@@ -577,13 +565,11 @@ class HederaService {
         if (!accountId) return [];
         console.log(`Fetching all associated tokens for account: ${accountId}`);
         try {
-            // This is a simplified version. A real app would handle pagination for accounts with many tokens.
             const apiUrl = `https://testnet.mirrornode.hedera.com/api/v1/accounts/${accountId}/tokens?limit=100`;
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error(`Mirror Node API error: ${response.statusText}`);
             
             const data = await response.json();
-            // We need more details, so we fetch token info for each
             const tokensWithDetails = await Promise.all(data.tokens.map(async (token: any) => {
                 const info = await this.getTokenInfo(token.token_id);
                 return { ...token, name: info.name, symbol: info.symbol };

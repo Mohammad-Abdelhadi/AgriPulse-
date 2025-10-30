@@ -25,7 +25,7 @@ const Header: React.FC = () => {
     ];
 
     const investorLinks = [
-        { path: '/investor', label: 'My Investments' }
+        { path: '/investor', label: 'My Dashboard' }
     ];
     
     const adminLinks = [

@@ -1,8 +1,23 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
+import { PRACTICES } from '../constants';
+import { Farm } from "../types";
 
-// Initialize the Google GenAI client.
-// The API key must be sourced from environment variables for security.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// The GoogleGenAI client instance. It's initialized lazily to prevent startup crashes.
+let ai: GoogleGenAI | null = null;
+
+/**
+ * Lazily initializes and returns the GoogleGenAI client instance.
+ * This prevents a startup crash if process.env.API_KEY is not available immediately,
+ * by deferring the initialization until the client is actually needed.
+ */
+const getAiClient = (): GoogleGenAI => {
+    if (!ai) {
+        // Initialize the Google GenAI client.
+        // The API key must be sourced from environment variables for security.
+        ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    }
+    return ai;
+};
 
 
 interface NftMetadataInput {
@@ -31,7 +46,8 @@ export const geminiService = {
     async generateNftImage(prompt: string): Promise<string> {
         console.log("Generating unique NFT image with Gemini...");
         try {
-            const response = await ai.models.generateImages({
+            const client = getAiClient();
+            const response = await client.models.generateImages({
                 model: 'imagen-4.0-generate-001',
                 prompt: prompt,
                 config: {
@@ -53,6 +69,103 @@ export const geminiService = {
             throw new Error("Failed to generate NFT artwork.");
         }
     },
+
+    /**
+     * Generates farm data using Gemini with a structured JSON output.
+     */
+    async generateFarmData(): Promise<any> {
+        console.log("Generating farm data with Gemini...");
+        try {
+            const client = getAiClient();
+            const practiceIds = PRACTICES.map(p => p.id).join(', ');
+            const prompt = `Generate realistic data for a sustainable farm. The farm should be located in the Middle East or Africa. Provide the following fields in JSON format: name (string), location (string, e.g., City, Country), story (string, 2-3 sentences), landArea (number between 10 and 200), areaUnit ('dunum' or 'hectare'), cropType (string), practices (an array of 2-3 practice IDs from this list: ${practiceIds}), and pricePerTon (number between 0.5 and 1.5, with 2 decimal places).`;
+
+            const responseSchema = {
+                type: Type.OBJECT,
+                properties: {
+                    name: { type: Type.STRING },
+                    location: { type: Type.STRING },
+                    story: { type: Type.STRING },
+                    landArea: { type: Type.NUMBER },
+                    areaUnit: { type: Type.STRING },
+                    cropType: { type: Type.STRING },
+                    practices: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING }
+                    },
+                    pricePerTon: { type: Type.NUMBER },
+                }
+            };
+
+            const response = await client.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: responseSchema,
+                },
+            });
+            
+            const farmData = JSON.parse(response.text);
+            console.log("Successfully generated farm data:", farmData);
+            return farmData;
+
+        } catch (error) {
+            console.error("Error generating farm data with Gemini:", error);
+            throw new Error("Failed to generate farm data.");
+        }
+    },
+
+    /**
+     * Analyzes farm data for plausibility and consistency using Gemini.
+     */
+    async analyzeFarmData(farmData: { name: string, location: string, story: string, cropType: string, landArea: number, areaUnit: string, practices: string[] }): Promise<{ plausibilityScore: number, consistencyScore: number, justification: string }> {
+        console.log("Analyzing farm data quality with Gemini...");
+        try {
+            const client = getAiClient();
+            const dataToAnalyze = {
+                ...farmData,
+                practices: farmData.practices.map(pId => PRACTICES.find(p => p.id === pId)?.name || pId) // Convert IDs to names for clarity
+            };
+
+            const prompt = `
+                You are an expert agricultural data analyst. Your task is to evaluate the plausibility and consistency of the following farm data.
+                - Check if the name, location, and story seem like genuine entries or random spam characters (e.g., "ssssss").
+                - Check if the crop type, land area, and selected practices are consistent with the geographical location and the farm's story.
+                - Provide your analysis ONLY in the following JSON format.
+                - IMPORTANT: The 'justification' field must be a concise summary of your findings and MUST NOT exceed 300 characters.
+                
+                Data: ${JSON.stringify(dataToAnalyze, null, 2)}
+            `;
+
+            const responseSchema = {
+                type: Type.OBJECT,
+                properties: {
+                    plausibilityScore: { type: Type.NUMBER, description: "A score from 0 (spam/random) to 100 (highly plausible)." },
+                    consistencyScore: { type: Type.NUMBER, description: "A score from 0 (inconsistent) to 100 (highly consistent)." },
+                    justification: { type: Type.STRING, description: "A brief justification for your scores, maximum 300 characters." }
+                }
+            };
+            
+            const response = await client.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: responseSchema,
+                },
+            });
+
+            const analysisResult = JSON.parse(response.text);
+            console.log("Successfully analyzed farm data:", analysisResult);
+            return analysisResult;
+
+        } catch (error) {
+            console.error("Error analyzing farm data with Gemini:", error);
+            throw new Error("AI data quality analysis failed.");
+        }
+    },
+
 
     /**
      * Generates a standards-compliant NFT metadata JSON object.

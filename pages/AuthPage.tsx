@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { AppRole } from '../types';
+import { AppRole, CompanyProfile } from '../types';
 
 const AuthPage: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -9,12 +9,28 @@ const AuthPage: React.FC = () => {
     const [isLogin, setIsLogin] = useState(true);
     const { login, signup } = useAuth();
 
+    // State for company profile
+    const [companyName, setCompanyName] = useState('');
+    const [companyLocation, setCompanyLocation] = useState('');
+    const [industry, setIndustry] = useState('');
+    const [annualFootprint, setAnnualFootprint] = useState(1000);
+
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (isLogin) {
             login(email, password);
         } else {
-            signup(email, password, role);
+            let companyProfile: CompanyProfile | undefined = undefined;
+            if (role === AppRole.INVESTOR) {
+                companyProfile = {
+                    name: companyName,
+                    location: companyLocation,
+                    industry: industry,
+                    annualCarbonFootprint: annualFootprint,
+                };
+            }
+            signup(email, password, role, companyProfile);
         }
     };
 
@@ -59,7 +75,7 @@ const AuthPage: React.FC = () => {
                                     onClick={() => setRole(AppRole.INVESTOR)}
                                     className={`py-2 px-4 rounded-l-md text-sm font-medium focus:z-10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors ${role === AppRole.INVESTOR ? 'bg-primary text-white' : 'bg-gray-100 text-text-secondary hover:bg-gray-200'}`}
                                 >
-                                    Investor
+                                    Company
                                 </button>
                                 <button
                                     type="button"
@@ -77,6 +93,28 @@ const AuthPage: React.FC = () => {
                                 </button>
                             </div>
                         </div>
+                    )}
+
+                    {!isLogin && role === AppRole.INVESTOR && (
+                         <div className="space-y-4 border-t pt-6 mt-6">
+                             <h3 className="text-lg font-semibold text-text-primary">Company Details</h3>
+                             <div>
+                                 <label className="block text-sm font-medium text-text-primary">Company Name</label>
+                                 <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-white text-text-primary border border-gray-300 rounded-md" />
+                             </div>
+                             <div>
+                                 <label className="block text-sm font-medium text-text-primary">Company Location</label>
+                                 <input type="text" value={companyLocation} onChange={(e) => setCompanyLocation(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-white text-text-primary border border-gray-300 rounded-md" />
+                             </div>
+                             <div>
+                                 <label className="block text-sm font-medium text-text-primary">Industry</label>
+                                 <input type="text" value={industry} onChange={(e) => setIndustry(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-white text-text-primary border border-gray-300 rounded-md" />
+                             </div>
+                             <div>
+                                 <label className="block text-sm font-medium text-text-primary">Annual Carbon Footprint (CO₂e tons)</label>
+                                 <input type="number" value={annualFootprint} onChange={(e) => setAnnualFootprint(parseInt(e.target.value) || 0)} required min="0" className="mt-1 block w-full px-3 py-2 bg-white text-text-primary border border-gray-300 rounded-md" />
+                             </div>
+                         </div>
                     )}
 
                     <button

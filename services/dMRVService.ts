@@ -1,9 +1,9 @@
 import { Farm } from '../types';
 import { PRACTICES, APPROVAL_THRESHOLD, HECTARE_TO_DUNUM } from '../constants';
+import { geminiService } from './geminiService';
 
 // This is a mock dMRV (Digital Monitoring, Reporting, and Verification) service.
-// In a real-world application, this would use satellite data, IoT sensors,
-// and advanced algorithms to verify farm data and calculate a trust score.
+// It now uses a multi-layered approach: initial checks followed by AI validation.
 
 interface VerificationResult {
     score: number;
@@ -12,27 +12,23 @@ interface VerificationResult {
     breakdown: Record<string, { score: number; max: number; reason: string }>;
 }
 
-// FIX: The farmData parameter was defined with too many exclusions.
-// The `totalTons` property is calculated before this service is called and is needed for the logic check.
-// Simplified the type to reflect the available data at the time of verification.
 type VerifiableFarmData = Omit<Farm, 'id' | 'status' | 'farmerId' | 'farmerName' | 'farmerHederaAccountId'>;
 
 export const dMRVService = {
-    verifyFarm: (farmData: VerifiableFarmData): VerificationResult => {
+    async verifyFarm(farmData: VerifiableFarmData): Promise<VerificationResult> {
         console.log("dMRV Service: Verifying farm data for", farmData.name);
         
         let totalScore = 0;
         const breakdown: VerificationResult['breakdown'] = {};
 
-        // 1. Data Completeness Score (Max 30)
+        // 1. Data Completeness Score (Max 25)
         let dataScore = 0;
         let dataReason = "Incomplete data.";
         if (farmData.location?.length > 5) dataScore += 10;
         if (farmData.story?.length > 50) dataScore += 10;
         if (farmData.cropType?.length > 2) dataScore += 5;
-        if (farmData.imageUrl) dataScore += 5;
-        if (dataScore > 25) dataReason = "All essential data provided.";
-        breakdown['dataCompleteness'] = { score: dataScore, max: 30, reason: dataReason };
+        // Image is no longer part of the form, so this check is removed.
+        breakdown['dataCompleteness'] = { score: dataScore, max: 25, reason: dataReason };
         totalScore += dataScore;
         
         // 2. Sustainable Practices Score (Max 40)
@@ -57,12 +53,41 @@ export const dMRVService = {
         breakdown['economicLogic'] = { score: logicScore, max: 30, reason: logicReason };
         totalScore += logicScore;
 
+        // 4. AI Plausibility & Consistency Check (Potential Penalty)
+        try {
+            console.log("dMRV: Sending data to Gemini for AI analysis...");
+            const aiAnalysis = await geminiService.analyzeFarmData({
+                name: farmData.name,
+                location: farmData.location,
+                story: farmData.story,
+                cropType: farmData.cropType,
+                landArea: farmData.landArea,
+                areaUnit: farmData.areaUnit,
+                practices: farmData.practices
+            });
+
+            let aiScore = 0;
+            // Apply a heavy penalty if AI plausibility is very low (indicates spam/junk data)
+            if (aiAnalysis.plausibilityScore < 20) {
+                aiScore = -50; // Heavy penalty
+                totalScore += aiScore;
+                console.warn("AI detected low plausibility. Applying penalty.", aiAnalysis.justification);
+            }
+            breakdown['aiValidation'] = { score: aiScore, max: 0, reason: `Plausibility: ${aiAnalysis.plausibilityScore}/100. ${aiAnalysis.justification}` };
+
+        } catch (error: any) {
+            console.error("AI validation step failed:", error.message);
+            // Add a breakdown entry to indicate failure, but don't penalize score
+            breakdown['aiValidation'] = { score: 0, max: 0, reason: `AI analysis failed: ${error.message}` };
+        }
+
+
         const isApproved = totalScore >= APPROVAL_THRESHOLD;
         const reason = isApproved 
             ? `Farm approved with a score of ${totalScore}.`
             : `Farm rejected. Score of ${totalScore} is below the required ${APPROVAL_THRESHOLD}.`;
             
-        console.log(`dMRV Result: Score ${totalScore}, Approved: ${isApproved}`);
+        console.log(`dMRV Result: Final Score ${totalScore}, Approved: ${isApproved}`);
 
         return {
             score: totalScore,

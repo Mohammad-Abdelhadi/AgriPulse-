@@ -1,4 +1,5 @@
 import React from 'react';
+import { FARMER_SHARE_PERCENT, PLATFORM_COMMISSION_PERCENT } from '../constants';
 
 const ContractBuilderPage: React.FC = () => {
     return (
@@ -19,7 +20,7 @@ const ContractBuilderPage: React.FC = () => {
                         <li>Investor selects credits and initiates the purchase.</li>
                         <li>A single, multi-party Hedera `TransferTransaction` is created.</li>
                         <li>The transaction requires signatures from both the Investor (for their HBAR) and the Admin/Treasury (for the platform's CO2 tokens).</li>
-                        <li>Upon execution, the investor's HBAR is automatically split: <strong className="text-text-primary">98%</strong> is sent to the Farmer, and <strong className="text-text-primary">2%</strong> is sent to the Admin as a platform commission. Simultaneously, the CO2 tokens are sent from the Admin/Treasury to the Investor.</li>
+                        <li>Upon execution, the investor's HBAR is automatically split: <strong className="text-text-primary">{FARMER_SHARE_PERCENT}%</strong> is sent to the Farmer, and <strong className="text-text-primary">{PLATFORM_COMMISSION_PERCENT}%</strong> is sent to the Admin as a platform commission. Simultaneously, the CO2 tokens are sent from the Admin/Treasury to the Investor.</li>
                         <li>The transaction is instantly marked as `Completed`, ensuring all parties receive their assets in a single, trustless step.</li>
                     </ol>
                     <p className="mt-4 bg-yellow-100 p-4 rounded-md text-yellow-800">
