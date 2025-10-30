@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFarm } from '../contexts/FarmContext';
 import { hederaService } from '../services/hederaService';
 import { AppRole } from '../types';
-import { useToast } from '../contexts/ToastContext';
+import { useNotification } from '../contexts/NotificationContext';
 
 interface AssociatedToken {
     token_id: string;
@@ -14,7 +14,7 @@ interface AssociatedToken {
 const WalletCleanupTool: React.FC = () => {
     const { user } = useAuth();
     const { deleteMultipleTokens, dissociateMultipleTokens } = useFarm();
-    const { showToast } = useToast();
+    const { addNotification } = useNotification();
     
     const [tokens, setTokens] = useState<AssociatedToken[]>([]);
     const [selectedTokens, setSelectedTokens] = useState<Set<string>>(new Set());
@@ -23,7 +23,7 @@ const WalletCleanupTool: React.FC = () => {
 
     const handleScan = useCallback(async () => {
         if (!user?.hederaAccountId) {
-            showToast("Please connect your wallet first.", "error");
+            addNotification("Please connect your wallet first.", "error");
             return;
         }
         setLoading(true);
@@ -35,15 +35,15 @@ const WalletCleanupTool: React.FC = () => {
             setTokens(associatedTokens);
             const message = `Found ${associatedTokens.length} associated tokens.`;
             setLogs(prev => [...prev, message]);
-            showToast(message, 'success');
+            addNotification(message, 'success');
         } catch (error: any) {
             const errorMessage = `ERROR: ${error.message}`;
             setLogs(prev => [...prev, errorMessage]);
-            showToast("Failed to scan wallet.", "error");
+            addNotification("Failed to scan wallet.", "error");
         } finally {
             setLoading(false);
         }
-    }, [user, showToast]);
+    }, [user, addNotification]);
 
     const handleToggleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.checked) {
@@ -72,7 +72,7 @@ const WalletCleanupTool: React.FC = () => {
 
     const handleAction = async () => {
         if (selectedTokens.size === 0) {
-            showToast("Please select at least one token.", "info");
+            addNotification("Please select at least one token.", "info");
             return;
         }
 
@@ -88,14 +88,14 @@ const WalletCleanupTool: React.FC = () => {
                 const result = await deleteMultipleTokens(tokenIdsToProcess, logCallback);
                  logCallback(`--- OPERATION COMPLETE ---`);
                  logCallback(result.summary);
-                 showToast(result.summary, result.success > 0 ? 'success' : 'error');
+                 addNotification(result.summary, result.success > 0 ? 'success' : 'error');
 
             } else if (user) {
                  logCallback(`Starting DISSOCIATE operation for ${tokenIdsToProcess.length} token(s)...`);
                  const result = await dissociateMultipleTokens(tokenIdsToProcess, user.role, logCallback);
                  logCallback(`--- OPERATION COMPLETE ---`);
                  logCallback(result.summary);
-                 showToast(result.summary, result.success > 0 ? 'success' : 'error');
+                 addNotification(result.summary, result.success > 0 ? 'success' : 'error');
             }
             
             // Refresh the list after the operation
@@ -103,7 +103,7 @@ const WalletCleanupTool: React.FC = () => {
 
         } catch (error: any) {
             logCallback(`FATAL ERROR: ${error.message}`);
-            showToast("An unexpected error occurred during the operation.", "error");
+            addNotification("An unexpected error occurred during the operation.", "error");
         } finally {
             setLoading(false);
             setSelectedTokens(new Set());

@@ -3,13 +3,13 @@ import { useFarm } from '../contexts/FarmContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Farm, FarmStatus } from '../types';
 import { Link } from 'react-router-dom';
-import { useToast } from '../contexts/ToastContext';
+import { useNotification } from '../contexts/NotificationContext';
 import { PLATFORM_COMMISSION_PERCENT, PLATFORM_COMMISSION_RATE, FARMER_SHARE_PERCENT } from '../constants';
 
 const Marketplace: React.FC = () => {
     const { user } = useAuth();
     const { farms, purchaseCredits, hbarToUsdRate } = useFarm();
-    const { showToast } = useToast();
+    const { addNotification } = useNotification();
     const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
     const [purchaseAmount, setPurchaseAmount] = useState(1);
     const [purchaseDetails, setPurchaseDetails] = useState({ totalHbar: 0, farmerReceives: 0, commission: 0 });
@@ -33,7 +33,7 @@ const Marketplace: React.FC = () => {
             setSelectedFarm(null);
             setPurchaseAmount(1);
         } else if (!user?.hederaAccountId) {
-            showToast("Please connect your Hedera wallet before making a purchase.", "error");
+            addNotification("Please connect your Hedera wallet before making a purchase.", "error");
         }
     };
     

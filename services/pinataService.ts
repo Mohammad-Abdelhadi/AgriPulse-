@@ -5,7 +5,7 @@ const PINATA_JSON_URL = 'https://api.pinata.cloud/pinning/pinJSONToIPFS';
 const PINATA_FILE_URL = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
 
 // Helper to convert Base64 to Blob
-const base64ToBlob = (base64: string, contentType = 'image/png'): Blob => {
+const base64ToBlob = (base64: string, contentType: string): Blob => {
     const byteCharacters = atob(base64);
     const byteArrays = [];
     for (let offset = 0; offset < byteCharacters.length; offset += 512) {
@@ -53,10 +53,10 @@ class PinataService {
         }
     }
 
-    async uploadImageToIpfs(base64Data: string, fileName: string): Promise<string> {
-        console.log("Uploading image to IPFS via Pinata...");
+    async uploadFileToIpfs(base64Data: string, fileName: string, contentType: string): Promise<string> {
+        console.log(`Uploading file (${fileName}) to IPFS via Pinata...`);
         try {
-            const blob = base64ToBlob(base64Data);
+            const blob = base64ToBlob(base64Data, contentType);
             const formData = new FormData();
             formData.append('file', blob, fileName);
 
@@ -78,11 +78,11 @@ class PinataService {
                 throw new Error("IPFS hash not found in Pinata file response.");
             }
 
-            console.log("Successfully pinned image to IPFS. CID:", result.IpfsHash);
+            console.log("Successfully pinned file to IPFS. CID:", result.IpfsHash);
             return result.IpfsHash;
 
         } catch (error) {
-            console.error("Failed to upload image to IPFS:", error);
+            console.error("Failed to upload file to IPFS:", error);
             throw error;
         }
     }

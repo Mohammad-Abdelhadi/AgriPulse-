@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AppRole, CompanyProfile } from '../types';
-import { useToast } from './ToastContext';
+import { useNotification } from './NotificationContext';
 
 interface AuthContextType {
     user: User | null;
@@ -21,6 +21,7 @@ const setupInitialUsers = () => {
             'admin@admin.com': {
                 id: 'user_admin',
                 email: 'admin@admin.com',
+                password: 'password',
                 role: AppRole.ADMIN,
                 hederaAccountId: '0.0.6928173',
                 hederaPrivateKey: '302e020100300506032b657004220420e1ee943a8de34d62da506b0512e6641eaed1850670577341f7cfc9c1f73245ce'
@@ -28,6 +29,7 @@ const setupInitialUsers = () => {
             'inv@inv.com': {
                 id: 'user_investor',
                 email: 'inv@inv.com',
+                password: 'password',
                 role: AppRole.INVESTOR,
                 hederaAccountId: '0.0.7085970',
                 hederaPrivateKey: '302e020100300506032b6570042204206c23a08e9dc11cbb48eacd1a9071883f601a0ccc18845956ad67f4e3a95c7742',
@@ -41,6 +43,7 @@ const setupInitialUsers = () => {
             'farmer@farm.com': {
                 id: 'user_farmer',
                 email: 'farmer@farm.com',
+                password: 'password',
                 role: AppRole.FARMER,
                 hederaAccountId: '0.0.7099230',
                 hederaPrivateKey: '302e020100300506032b657004220420c3d3e5dd8a0b57aaa5e50db9e243d031d8426a014bf691c8e514178f81298613'
@@ -55,7 +58,7 @@ const setupInitialUsers = () => {
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
-    const { showToast } = useToast();
+    const { addNotification } = useNotification();
 
     useEffect(() => {
         try {
@@ -74,15 +77,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const login = (email: string, pass: string) => {
         setLoading(true);
-        // Note: Password is not being checked for this demo app
         const storedUsers = JSON.parse(localStorage.getItem('agripulse_users') || '{}');
-        if (storedUsers[email]) {
-            const loggedInUser = storedUsers[email];
+        const userFromStorage = storedUsers[email];
+
+        if (userFromStorage && userFromStorage.password === pass) {
+            const { password, ...userWithoutPassword } = userFromStorage;
+            const loggedInUser = userWithoutPassword as User;
             setUser(loggedInUser);
             localStorage.setItem('agripulse_user', JSON.stringify(loggedInUser));
-            showToast(`Welcome back, ${email}!`, 'success');
+            addNotification(`Welcome back, ${email}!`, 'success');
+        } else if (userFromStorage) {
+            addNotification('Incorrect password. Please try again.', 'error');
         } else {
-            showToast('User not found. Please sign up.', 'error');
+            addNotification('User not found. Please sign up.', 'error');
         }
         setLoading(false);
     };
@@ -91,7 +98,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setLoading(true);
         const storedUsers = JSON.parse(localStorage.getItem('agripulse_users') || '{}');
         if (storedUsers[email]) {
-            showToast('User with this email already exists.', 'error');
+            addNotification('User with this email already exists.', 'error');
             setLoading(false);
             return;
         }
@@ -102,19 +109,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             role,
             ...(role === AppRole.INVESTOR && companyProfile && { companyProfile }),
         };
+
+        const userWithPassword = {
+            ...newUser,
+            password: pass,
+        };
         
-        storedUsers[email] = newUser;
+        storedUsers[email] = userWithPassword;
         localStorage.setItem('agripulse_users', JSON.stringify(storedUsers));
         localStorage.setItem('agripulse_user', JSON.stringify(newUser));
         setUser(newUser);
-        showToast('Account created successfully!', 'success');
+        addNotification('Account created successfully!', 'success');
         setLoading(false);
     };
 
     const logout = () => {
         setUser(null);
         localStorage.removeItem('agripulse_user');
-        showToast("You've been logged out.", 'info');
+        addNotification("You've been logged out.", 'info');
     };
     
     const updateUserWallet = (hederaAccountId: string, hederaPrivateKey: string) => {
@@ -125,10 +137,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.setItem('agripulse_user', JSON.stringify(updatedUser));
         
         const storedUsers = JSON.parse(localStorage.getItem('agripulse_users') || '{}');
-        storedUsers[user.email] = updatedUser;
+        storedUsers[user.email] = { ...storedUsers[user.email], ...updatedUser };
         localStorage.setItem('agripulse_users', JSON.stringify(storedUsers));
         
-        showToast('Wallet information saved successfully!', 'success');
+        addNotification('Wallet information saved successfully!', 'success');
     };
 
     const updateCompanyProfile = (profile: CompanyProfile) => {
@@ -139,10 +151,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.setItem('agripulse_user', JSON.stringify(updatedUser));
         
         const storedUsers = JSON.parse(localStorage.getItem('agripulse_users') || '{}');
-        storedUsers[user.email] = updatedUser;
+        storedUsers[user.email] = { ...storedUsers[user.email], ...updatedUser };
         localStorage.setItem('agripulse_users', JSON.stringify(storedUsers));
         
-        showToast('Company profile updated successfully!', 'success');
+        addNotification('Company profile updated successfully!', 'success');
     };
 
     return (

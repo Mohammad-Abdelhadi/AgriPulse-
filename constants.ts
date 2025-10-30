@@ -56,3 +56,5 @@ export const INVESTOR_IMPACT_LEVELS: InvestorNftLevel[] = [
         description: 'The highest honor for a landmark single purchase of over 1,000 tons of CO₂e credits.'
     }
 ];
+
+export const DEDICATED_IPFS_GATEWAY_URL = 'https://copper-careful-dragonfly-654.mypinata.cloud/ipfs/';

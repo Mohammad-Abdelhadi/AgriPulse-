@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NftRarity } from '../types';
+import { DEDICATED_IPFS_GATEWAY_URL } from '../constants';
 
 interface NftMetadata {
     name: string;
@@ -16,50 +17,41 @@ interface NftCardProps {
     showImage?: boolean;
 }
 
-// A list of public IPFS gateways to try in order of preference for resilience.
-const IPFS_GATEWAYS = [
-    'https://cloudflare-ipfs.com/ipfs/',
-    'https://gateway.pinata.cloud/ipfs/',
-    'https://ipfs.io/ipfs/',
-    'https://dweb.link/ipfs/',
-];
-
 /**
- * Fetches a file from IPFS using a CID, trying multiple public gateways for resilience.
- * Implements an exponential backoff retry mechanism if all gateways fail.
+ * Fetches a file from IPFS using a CID from the dedicated gateway.
+ * Implements an exponential backoff retry mechanism if the gateway fails.
  * @param cid The IPFS Content Identifier (CID).
- * @param retries The number of times to retry the entire loop of gateways.
+ * @param retries The number of times to retry fetching.
  * @param delay The initial delay between retry attempts in milliseconds.
  * @returns A Promise that resolves to the fetch Response.
  */
 const fetchWithRetry = async (cid: string, retries = 3, delay = 1000): Promise<Response> => {
+    const url = `${DEDICATED_IPFS_GATEWAY_URL}${cid}`;
     for (let attempt = 0; attempt < retries; attempt++) {
-        for (const gateway of IPFS_GATEWAYS) {
-            const url = `${gateway}${cid}`;
-            try {
-                // Use AbortController for fetch timeout
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout per gateway
-                
-                const response = await fetch(url, { signal: controller.signal });
-                clearTimeout(timeoutId);
+        try {
+            // Use AbortController for fetch timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8-second timeout
 
-                if (response.ok) {
-                    console.log(`Successfully fetched from ${url}`);
-                    return response;
-                }
-                console.warn(`Attempt ${attempt + 1} failed for gateway ${gateway}: ${response.status} ${response.statusText}`);
-            } catch (error) {
-                console.warn(`Attempt ${attempt + 1} failed for gateway ${gateway} with network error:`, error);
+            const response = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+                console.log(`Successfully fetched from ${url}`);
+                return response;
             }
+            console.warn(`Attempt ${attempt + 1} failed for dedicated gateway: ${response.status} ${response.statusText}`);
+        } catch (error) {
+            console.warn(`Attempt ${attempt + 1} failed for dedicated gateway with network error:`, error);
         }
+        
         if (attempt < retries - 1) {
             const backoffDelay = delay * Math.pow(2, attempt);
-            console.log(`All gateways failed. Retrying in ${backoffDelay}ms...`);
+            console.log(`Dedicated gateway failed. Retrying in ${backoffDelay}ms...`);
             await new Promise(resolve => setTimeout(resolve, backoffDelay));
         }
     }
-    throw new Error(`Failed to fetch from all IPFS gateways after ${retries} attempts.`);
+    throw new Error(`Failed to fetch from dedicated IPFS gateway after ${retries} attempts.`);
 };
 
 
@@ -87,10 +79,10 @@ const NftCard: React.FC<NftCardProps> = ({ metadataUrl, rarity, rarityStyles, on
                 const response = await fetchWithRetry(cid);
                 const data: NftMetadata = await response.json();
                 
-                // If the image URL within the metadata is also an IPFS link, convert it using the first (primary) gateway.
+                // If the image URL within the metadata is also an IPFS link, convert it.
                 if (data.image && data.image.startsWith('ipfs://')) {
                     const imageCid = data.image.substring(7);
-                    data.image = `${IPFS_GATEWAYS[0]}${imageCid}`;
+                    data.image = `${DEDICATED_IPFS_GATEWAY_URL}${imageCid}`;
                 }
                 setMetadata(data);
             } catch (err: any) {

@@ -1,9 +1,9 @@
 import React from 'react';
-import { useToast } from '../contexts/ToastContext';
+import { useNotification } from '../contexts/NotificationContext';
 import Toast from './Toast';
 
 const ToastContainer: React.FC = () => {
-    const { toasts, removeToast } = useToast();
+    const { toasts, removeToast } = useNotification();
 
     return (
         <div

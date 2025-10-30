@@ -55,6 +55,7 @@ export interface Farm {
     farmNftHashscanUrl?: string;
     farmNftMetadataUrl?: string; // URL to the rich IPFS metadata for the farm NFT
     hcsLog?: string; // URL to the HCS transaction receipt for verification
+    certificateIpfsUrl?: string; // URL to the uploaded ownership certificate on IPFS
 }
 
 export interface Purchase {
@@ -125,13 +126,15 @@ export interface InvestorNft {
     metadataUrl?: string; // To store the IPFS URL for the rich metadata
 }
 
-export type ToastType = 'success' | 'error' | 'info';
+export type NotificationType = 'success' | 'error' | 'info';
 
-export interface ToastMessage {
+export interface Notification {
   id: number;
   message: string;
-  type: ToastType;
+  type: NotificationType;
   link?: string;
+  read: boolean;
+  timestamp: number;
 }
 
 export interface PlatformTokenInfo {
@@ -206,7 +209,7 @@ export interface FarmContextType {
     hbarToUsdRate: number;
     userBalance: { hbar: number, tokens: { tokenId: string, balance: number }[] } | null;
     refreshUserBalance: () => Promise<void>;
-    registerFarm: (farmData: Omit<Farm, 'id' | 'farmerId' | 'farmerName' | 'farmerHederaAccountId' | 'totalTons' | 'availableTons' | 'status' | 'investorCount'>) => Promise<Farm | null>;
+    registerFarm: (farmData: Omit<Farm, 'id' | 'farmerId' | 'farmerName' | 'farmerHederaAccountId' | 'totalTons' | 'availableTons' | 'status' | 'investorCount' | 'certificateIpfsUrl'>, certificate: { mimeType: string; data: string; } | null) => Promise<Farm | null>;
     purchaseCredits: (farmId: string, tons: number) => Promise<void>;
     createPlatformToken: (name: string, symbol: string, initialSupply: number) => Promise<void>;
     associateWithPlatformToken: () => Promise<boolean>;
@@ -222,4 +225,14 @@ export interface FarmContextType {
     deleteNftCollection: (collectionId: string) => Promise<void>;
     deleteMultipleTokens: (tokenIds: string[], logCallback: (message: string) => void) => Promise<{ success: number; failed: number; summary: string }>;
     dissociateMultipleTokens: (tokenIds: string[], userRole: AppRole, logCallback: (message: string) => void) => Promise<{ success: number; failed: number; summary: string }>;
+}
+
+export interface NotificationContextType {
+    toasts: Notification[];
+    notifications: Notification[];
+    unreadCount: number;
+    addNotification: (message: string, type: NotificationType, link?: string) => void;
+    removeToast: (id: number) => void;
+    markAsRead: (id: number) => void;
+    markAllAsRead: () => void;
 }

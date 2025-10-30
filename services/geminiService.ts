@@ -165,6 +165,60 @@ export const geminiService = {
             throw new Error("AI data quality analysis failed.");
         }
     },
+    
+    async analyzeCertificate(certificate: { mimeType: 'application/pdf'; data: string; }): Promise<{ score: number; justification: string; extractedData: object; }> {
+        console.log("Analyzing PDF certificate with Gemini...");
+        try {
+            const client = getAiClient();
+            const prompt = `
+                You are an agricultural land registrar. Analyze the provided PDF document.
+                1.  Confirm if it appears to be a legitimate Farm Ownership Certificate or similar official land document.
+                2.  Extract the following information if available: 'Farmer Name', 'National ID', 'Location', and 'Total Area'. If a field is not found, return 'N/A'.
+                3.  Provide a confidence score from 0 to 100 on the document's authenticity. A low score (0-40) for documents that are clearly not certificates. A medium score (41-70) for plausible but simple documents. A high score (71-100) for documents that look official with clear formatting, seals, or signatures.
+                4.  Provide a brief justification for your score (max 150 characters).
+                5.  Return your analysis ONLY in the specified JSON format.
+            `;
+
+            const responseSchema = {
+                type: Type.OBJECT,
+                properties: {
+                    score: { type: Type.NUMBER },
+                    justification: { type: Type.STRING },
+                    extractedData: {
+                        type: Type.OBJECT,
+                        properties: {
+                            "Farmer Name": { type: Type.STRING },
+                            "National ID": { type: Type.STRING },
+                            "Location": { type: Type.STRING },
+                            "Total Area": { type: Type.STRING }
+                        }
+                    }
+                }
+            };
+            
+            const response = await client.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: {
+                    parts: [
+                        { inlineData: { mimeType: certificate.mimeType, data: certificate.data } },
+                        { text: prompt }
+                    ]
+                },
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: responseSchema,
+                },
+            });
+
+            const analysisResult = JSON.parse(response.text);
+            console.log("Successfully analyzed certificate:", analysisResult);
+            return analysisResult;
+
+        } catch (error) {
+            console.error("Error analyzing certificate with Gemini:", error);
+            throw new Error("AI certificate analysis failed.");
+        }
+    },
 
 
     /**

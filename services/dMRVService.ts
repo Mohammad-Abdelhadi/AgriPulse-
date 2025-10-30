@@ -12,48 +12,66 @@ interface VerificationResult {
     breakdown: Record<string, { score: number; max: number; reason: string }>;
 }
 
-type VerifiableFarmData = Omit<Farm, 'id' | 'status' | 'farmerId' | 'farmerName' | 'farmerHederaAccountId'>;
+type VerifiableFarmData = Omit<Farm, 'id' | 'status' | 'farmerId' | 'farmerName' | 'farmerHederaAccountId' | 'certificateIpfsUrl'>;
 
 export const dMRVService = {
-    async verifyFarm(farmData: VerifiableFarmData): Promise<VerificationResult> {
+    async verifyFarm(farmData: VerifiableFarmData, certificate: { mimeType: string; data: string; } | null): Promise<VerificationResult> {
         console.log("dMRV Service: Verifying farm data for", farmData.name);
         
         let totalScore = 0;
         const breakdown: VerificationResult['breakdown'] = {};
 
-        // 1. Data Completeness Score (Max 25)
+        // 1. Data Completeness Score (Max 15)
         let dataScore = 0;
         let dataReason = "Incomplete data.";
-        if (farmData.location?.length > 5) dataScore += 10;
-        if (farmData.story?.length > 50) dataScore += 10;
+        if (farmData.location?.length > 5) dataScore += 5;
+        if (farmData.story?.length > 50) dataScore += 5;
         if (farmData.cropType?.length > 2) dataScore += 5;
-        // Image is no longer part of the form, so this check is removed.
-        breakdown['dataCompleteness'] = { score: dataScore, max: 25, reason: dataReason };
+        breakdown['dataCompleteness'] = { score: dataScore, max: 15, reason: dataReason };
         totalScore += dataScore;
         
-        // 2. Sustainable Practices Score (Max 40)
+        // 2. Sustainable Practices Score (Max 35)
         let practiceScore = 0;
         const practiceCount = farmData.practices.length;
         let practiceReason = "No sustainable practices selected.";
         if (practiceCount === 1) practiceScore = 15;
         else if (practiceCount === 2) practiceScore = 25;
-        else if (practiceCount > 2) practiceScore = 40;
+        else if (practiceCount > 2) practiceScore = 35;
         if (practiceCount > 0) practiceReason = `${practiceCount} practice(s) selected.`;
-        breakdown['sustainablePractices'] = { score: practiceScore, max: 40, reason: practiceReason };
+        breakdown['sustainablePractices'] = { score: practiceScore, max: 35, reason: practiceReason };
         totalScore += practiceScore;
 
-        // 3. Land Area & CO2 Logic Score (Max 30)
+        // 3. Land Area & CO2 Logic Score (Max 20)
         let logicScore = 0;
         let logicReason = "Land area or CO2 calculation seems low.";
         const areaInDunums = farmData.areaUnit === 'hectare' ? farmData.landArea * HECTARE_TO_DUNUM : farmData.landArea;
-        if (areaInDunums > 5) logicScore += 10;
+        if (areaInDunums > 5) logicScore += 5;
         if (farmData.totalTons > 10) logicScore += 10;
-        if (farmData.pricePerTon > 0.05) logicScore += 10;
-        if (logicScore > 20) logicReason = "Plausible land area and pricing.";
-        breakdown['economicLogic'] = { score: logicScore, max: 30, reason: logicReason };
+        if (farmData.pricePerTon > 0.05) logicScore += 5;
+        if (logicScore > 15) logicReason = "Plausible land area and pricing.";
+        breakdown['economicLogic'] = { score: logicScore, max: 20, reason: logicReason };
         totalScore += logicScore;
+        
+        // 4. Certificate Validation Score (Max 30)
+        // FIX: Re-structured the conditional to use a direct check. This ensures TypeScript correctly
+        // narrows the type of `certificate` to `{ mimeType: "application/pdf"; ... }` before passing it to the analysis service, resolving the type error.
+        if (certificate && certificate.mimeType === 'application/pdf') {
+            try {
+                console.log("dMRV: Sending certificate to Gemini for analysis...");
+                const certAnalysis = await geminiService.analyzeCertificate(certificate);
+                const certScore = Math.round(certAnalysis.score * (30 / 100)); // Scale to 30 max points
+                totalScore += certScore;
+                breakdown['certificateValidation'] = { score: certScore, max: 30, reason: certAnalysis.justification };
+            } catch (error: any) {
+                console.error("Certificate validation step failed:", error.message);
+                breakdown['certificateValidation'] = { score: 0, max: 30, reason: `AI analysis failed: ${error.message}` };
+            }
+        } else {
+            breakdown['certificateValidation'] = { score: 0, max: 30, reason: certificate ? "Only PDF files are accepted for certificate validation." : "No certificate provided." };
+        }
 
-        // 4. AI Plausibility & Consistency Check (Potential Penalty)
+
+        // 5. AI Plausibility & Consistency Check (Potential Penalty)
         try {
             console.log("dMRV: Sending data to Gemini for AI analysis...");
             const aiAnalysis = await geminiService.analyzeFarmData({

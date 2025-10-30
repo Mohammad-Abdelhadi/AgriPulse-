@@ -8,12 +8,12 @@ import { hederaService } from '../services/hederaService';
 import QrCodeModal from '../components/QrCodeModal';
 import NftCard from '../components/NftCard';
 import { geminiService } from '../services/geminiService';
-import { useToast } from '../contexts/ToastContext';
+import { useNotification } from '../contexts/NotificationContext';
 
 const FarmerDashboard: React.FC = () => {
     const { user } = useAuth();
     const { farms, registerFarm, error, hbarToUsdRate, farmerNftCollectionInfo, associateWithFarmerNftCollection, farmerNfts } = useFarm();
-    const { showToast } = useToast();
+    const { addNotification: showToast } = useNotification();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAssociated, setIsAssociated] = useState(false);
     const [associationLoading, setAssociationLoading] = useState(false);
@@ -26,14 +26,15 @@ const FarmerDashboard: React.FC = () => {
     const [farmName, setFarmName] = useState('');
     const [location, setLocation] = useState('');
     const [story, setStory] = useState('');
-    // FIX: Explicitly type the 'landArea' state as a number to prevent TypeScript from inferring
-    // a wider type (e.g., string | number) when it's updated with data from an API call.
-    // This resolves potential arithmetic operation errors.
     const [landArea, setLandArea] = useState<number>(10);
     const [areaUnit, setAreaUnit] = useState<'dunum' | 'hectare'>('dunum');
     const [cropType, setCropType] = useState('');
     const [selectedPractices, setSelectedPractices] = useState<Set<string>>(new Set());
     const [pricePerTon, setPricePerTon] = useState(0.01);
+    const [certificateFile, setCertificateFile] = useState<File | null>(null);
+    const [certificateBase64, setCertificateBase64] = useState<string | null>(null);
+    const [isProcessingFile, setIsProcessingFile] = useState(false);
+
 
     const myFarms = useMemo(() => farms.filter(f => f.farmerId === user?.id), [farms, user]);
     const myNfts = useMemo(() => farmerNfts.filter(n => n.farmerId === user?.id).sort((a, b) => new Date(b.mintDate).getTime() - new Date(a.mintDate).getTime()), [farmerNfts, user]);
@@ -77,6 +78,8 @@ const FarmerDashboard: React.FC = () => {
         setFarmName(''); setLocation(''); setStory(''); setLandArea(10);
         setAreaUnit('dunum'); setCropType(''); setSelectedPractices(new Set());
         setPricePerTon(0.01);
+        setCertificateFile(null);
+        setCertificateBase64(null);
     };
 
     const handlePracticeToggle = (practiceId: string) => {
@@ -109,15 +112,47 @@ const FarmerDashboard: React.FC = () => {
     const handleRegisterFarm = (e: React.FormEvent) => {
         e.preventDefault();
         if (user) {
+            const certificatePayload = certificateFile && certificateBase64 
+                ? { mimeType: certificateFile.type, data: certificateBase64 } 
+                : null;
+            
             registerFarm({
                 name: farmName, location, story, landArea, areaUnit, cropType,
                 practices: Array.from(selectedPractices), pricePerTon,
-            }).then(newlyRegisteredFarm => {
+            }, certificatePayload).then(newlyRegisteredFarm => {
                 if (newlyRegisteredFarm) {
                     setIsModalOpen(false);
                     resetForm();
                 }
             });
+        }
+    };
+    
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.type !== 'application/pdf') {
+                showToast("Only PDF files are accepted.", "error");
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                showToast("File size must be under 5MB.", "error");
+                return;
+            }
+            setIsProcessingFile(true);
+            setCertificateFile(file);
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const base64 = (event.target?.result as string).split(',')[1];
+                setCertificateBase64(base64);
+                setIsProcessingFile(false);
+                showToast("Certificate loaded successfully.", "success");
+            };
+            reader.onerror = () => {
+                showToast("Failed to read the file.", "error");
+                setIsProcessingFile(false);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -329,12 +364,10 @@ const FarmerDashboard: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-text-primary">Farm Name</label>
-                                        {/* FIX: Add minLength and title for client-side validation */}
                                         <input type="text" value={farmName} onChange={(e) => setFarmName(e.target.value)} required minLength={5} title="Please enter a name at least 5 characters long." className={`mt-1 block w-full ${inputStyle}`}/>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-text-primary">Location (e.g., Governorate, GPS)</label>
-                                        {/* FIX: Add minLength and title for client-side validation */}
                                         <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} required minLength={5} title="Please enter a location at least 5 characters long." className={`mt-1 block w-full ${inputStyle}`}/>
                                     </div>
                                 </div>
@@ -352,17 +385,26 @@ const FarmerDashboard: React.FC = () => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-text-primary">Agricultural Type (e.g., Wheat, Olives)</label>
-                                        {/* FIX: Add minLength and title for client-side validation */}
                                         <input type="text" value={cropType} onChange={(e) => setCropType(e.target.value)} required minLength={3} title="Please enter a crop type at least 3 characters long." className={`mt-1 block w-full ${inputStyle}`}/>
                                     </div>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-text-primary">My Farm's Story</label>
-                                    {/* FIX: Add minLength and title for client-side validation */}
                                     <textarea value={story} onChange={(e) => setStory(e.target.value)} required rows={4} minLength={50} title="Please provide a story at least 50 characters long." className={`mt-1 block w-full ${inputStyle}`} placeholder="Tell us about your farm, its history, and your sustainability goals."></textarea>
                                 </div>
                                 
+                                <div>
+                                    <label className="block text-sm font-medium text-text-primary">Farm Ownership Certificate (PDF, max 5MB)</label>
+                                    <div className="mt-1 flex items-center space-x-4">
+                                        <input type="file" id="certificate-upload" accept="application/pdf" onChange={handleFileChange} className="hidden"/>
+                                        <label htmlFor="certificate-upload" className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                            {isProcessingFile ? 'Loading...' : certificateFile ? 'Change File' : 'Upload PDF'}
+                                        </label>
+                                        {certificateFile && <span className="text-sm text-text-secondary truncate">{certificateFile.name}</span>}
+                                    </div>
+                                </div>
+
                                 <fieldset>
                                     <legend className="block text-sm font-medium text-text-primary">Carbon Reduction Practices</legend>
                                     <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
@@ -410,8 +452,8 @@ const FarmerDashboard: React.FC = () => {
                                         )}
                                     </div>
                                     <div className="flex justify-end space-x-4">
-                                        <button type="button" onClick={() => setIsModalOpen(false)} disabled={isGenerating} className="px-6 py-2 rounded-lg bg-gray-200 text-text-secondary hover:bg-gray-300 transition-colors disabled:opacity-50">Cancel</button>
-                                        <button type="submit" disabled={isGenerating} className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50">Submit for Verification</button>
+                                        <button type="button" onClick={() => setIsModalOpen(false)} disabled={isGenerating || isProcessingFile} className="px-6 py-2 rounded-lg bg-gray-200 text-text-secondary hover:bg-gray-300 transition-colors disabled:opacity-50">Cancel</button>
+                                        <button type="submit" disabled={isGenerating || isProcessingFile} className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50">Submit for Verification</button>
                                     </div>
                                 </div>
                             </div>

@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
-import { ToastMessage } from '../types';
+import React, { useEffect, useState } from 'react';
+import { Notification } from '../types';
 
 interface ToastProps {
-  toast: ToastMessage;
+  toast: Notification;
   onClose: (id: number) => void;
 }
 
@@ -25,20 +25,42 @@ const ICONS = {
 };
 
 const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            onClose(toast.id);
-        }, 5000); // Auto-dismiss after 5 seconds
+    // This state will help manage the exit animation
+    const [isExiting, setIsExiting] = useState(false);
 
+    useEffect(() => {
+        // Set a timer to start the exit animation just before the toast should be removed
+        const exitTimer = setTimeout(() => {
+            setIsExiting(true);
+        }, 4700); // 5000ms total - 300ms for animation
+
+        // Set a timer to call the onClose handler to remove the toast from the DOM
+        const removalTimer = setTimeout(() => {
+            onClose(toast.id);
+        }, 5000);
+
+        // Cleanup timers on component unmount
         return () => {
-            clearTimeout(timer);
+            clearTimeout(exitTimer);
+            clearTimeout(removalTimer);
         };
     }, [toast.id, onClose]);
 
-    const baseClasses = "flex items-start p-4 w-full max-w-sm bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden";
-    
+    // Handler for the close button
+    const handleClose = () => {
+        setIsExiting(true);
+        // Allow time for the fade-out animation before calling onClose
+        setTimeout(() => {
+            onClose(toast.id);
+        }, 300);
+    };
+
+    const baseClasses = "relative flex items-start p-4 w-full max-w-sm bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden";
+    // Apply fade-in on mount, and fade-out when exiting
+    const animationClass = isExiting ? 'animate-fade-out' : 'animate-fade-in';
+
     return (
-        <div className={baseClasses}>
+        <div className={`${baseClasses} ${animationClass}`}>
             <div className="flex-shrink-0">{ICONS[toast.type]}</div>
             <div className="ml-3 w-0 flex-1 pt-0.5">
                 <p className="text-sm font-medium text-gray-900">{toast.message}</p>
@@ -55,7 +77,7 @@ const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
             </div>
             <div className="ml-4 flex-shrink-0 flex">
                 <button
-                    onClick={() => onClose(toast.id)}
+                    onClick={handleClose}
                     className="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 >
                     <span className="sr-only">Close</span>
@@ -64,6 +86,8 @@ const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
                     </svg>
                 </button>
             </div>
+            {/* The progress bar should only be visible when the toast is not exiting */}
+            {!isExiting && <div className="absolute bottom-0 left-0 h-1 bg-primary/50 animate-progress"></div>}
         </div>
     );
 };

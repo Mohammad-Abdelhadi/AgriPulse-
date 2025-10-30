@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFarm } from '../contexts/FarmContext';
 import { Link } from 'react-router-dom';
-import { useToast } from '../contexts/ToastContext';
+import { useNotification } from '../contexts/NotificationContext';
 import { INVESTOR_IMPACT_LEVELS } from '../constants';
 import QrCodeModal from '../components/QrCodeModal';
 import { NftRarity, CompanyProfile } from '../types';
@@ -16,7 +16,7 @@ const InvestorDashboard: React.FC = () => {
         investorNftCollectionInfo, associateWithInvestorNftCollection,
         userBalance // Consume centralized balance state
     } = useFarm();
-    const { showToast } = useToast();
+    const { addNotification: showToast } = useNotification();
     
     const [associationLoading, setAssociationLoading] = useState(false);
     const [isRetireModalOpen, setIsRetireModalOpen] = useState(false);
