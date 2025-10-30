@@ -14,7 +14,6 @@ import WalletPage from './pages/WalletPage';
 import { NotificationProvider } from './contexts/NotificationContext';
 import ToastContainer from './components/ToastContainer';
 import TransactionHistory from './pages/TransactionHistory';
-import ServiceProviderDashboard from './pages/ServiceProviderDashboard';
 import LandingPage from './pages/LandingPage';
 import OurProcessPage from './pages/OurProcessPage';
 import AppLayout from './components/AppLayout';
@@ -64,7 +63,6 @@ const AppRoutes: React.FC = () => {
             <Route path="/farmer" element={user?.role === AppRole.FARMER ? <FarmerDashboard /> : <Navigate to={user ? "/marketplace" : "/auth"} />} />
             <Route path="/investor" element={user?.role === AppRole.INVESTOR ? <InvestorDashboard /> : <Navigate to={user ? "/marketplace" : "/auth"} />} />
             <Route path="/admin" element={user?.role === AppRole.ADMIN ? <AdminDashboard /> : <Navigate to={user ? "/marketplace" : "/auth"} />} />
-            <Route path="/service-provider" element={user?.role === AppRole.SERVICE_PROVIDER ? <ServiceProviderDashboard /> : <Navigate to={user ? "/marketplace" : "/auth"} />} />
 
             {/* Default and wildcard routes */}
             <Route path="/" element={<Navigate to="/landing" />} />

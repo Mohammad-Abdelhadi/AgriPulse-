@@ -1,180 +1,140 @@
 import React from 'react';
 import { Link } from "react-router-dom";
 import { 
-  LeafIcon, 
-  TrendingUpIcon, 
+  CheckCircleIcon,
   ShieldIcon, 
-  GlobeIcon, 
-  ArrowRightIcon,
-  ZapIcon
+  ZapIcon,
 } from "../components/icons";
 
-const heroImage = "https://images.pexels.com/photos/158826/field-corn-air-frisch-158826.jpeg";
-
 const LandingPage = () => {
-  const features = [
-    {
-      icon: ShieldIcon,
-      title: "Auditable Verification",
-      description: "Every verification step is recorded on the Hedera Consensus Service (HCS) for an immutable audit trail."
-    },
-    {
-      icon: GlobeIcon,
-      title: "Blockchain Transparency",
-      description: "All transactions and verifications are recorded on the Hedera DLT for complete traceability."
-    },
-    {
-      icon: TrendingUpIcon,
-      title: "Real Impact",
-      description: "Create a direct connection between sustainable farmers and global investors."
-    },
-    {
-      icon: ZapIcon,
-      title: "Instant Settlement",
-      description: "Hedera's atomic swaps automate payments and credit transfers instantly."
-    }
-  ];
-
-  const stats = [
-    { label: "Total Credits Listed", value: "1.2M tons" },
-    { label: "Verified Farms", value: "240+" },
-    { label: "Active Farmers", value: "1,500+" },
-    { label: "Investors", value: "300+" }
-  ];
-
   return (
-    <div className="min-h-screen bg-background text-text-primary">
-      {/* LandingNavbar component is removed to fix the duplicate header issue */}
-      
+    <div className="bg-white text-text-primary font-sans">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gray-900">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-dark to-black opacity-80" />
-        <div 
-          className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-30"
-          style={{ backgroundImage: `url(${heroImage})` }}
-        />
-        
-        <div className="relative container mx-auto px-4 py-24 md:py-32">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-primary/10 backdrop-blur-sm border border-primary/20 rounded-full px-4 py-2 mb-6">
-              <LeafIcon className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Powered by Hedera</span>
-            </div>
-            
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-              A Decentralized Carbon Credit Marketplace
-            </h1>
-            
-            <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed">
-              Connect sustainable farmers with global investors. 
-              Trade verified, tokenized carbon credits with complete transparency on the blockchain.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/auth">
-                <button className="w-full sm:w-auto text-lg h-14 px-8 flex items-center justify-center bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-                  Get Started
-                  <ArrowRightIcon className="ml-2 h-5 w-5" />
-                </button>
-              </Link>
-              <Link to="/marketplace">
-                 <button className="w-full sm:w-auto text-lg h-14 px-8 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-lg font-semibold hover:bg-white/20 transition-colors">
-                  Explore Credits
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold text-primary mb-2">
-                  {stat.value}
+      <section className="relative bg-white">
+        <div className="container mx-auto px-4 py-20 md:py-32 flex flex-col md:flex-row items-center">
+            <div className="md:w-1/2 text-center md:text-left">
+                <h1 className="text-4xl md:text-6xl font-extrabold text-text-primary mb-4 leading-tight tracking-tighter animate-fade-in">
+                    The Future of <span className="text-primary">Carbon Credits</span> is Transparent.
+                </h1>
+                <p className="text-lg md:text-xl text-text-secondary mb-8 max-w-xl mx-auto md:mx-0 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                    AgriPulse is a decentralized marketplace that connects sustainable farmers directly with investors, powered by AI verification and the Hedera blockchain.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                    <Link 
+                      to="/auth" 
+                      className="inline-block bg-primary text-white font-bold py-3 px-8 rounded-lg hover:bg-primary-dark transition-transform transform hover:scale-105 shadow-lg text-lg"
+                    >
+                      Get Started
+                    </Link>
+                    <Link 
+                      to="/marketplace" 
+                      className="inline-block bg-gray-200 text-text-primary font-bold py-3 px-8 rounded-lg hover:bg-gray-300 transition-colors shadow-lg text-lg"
+                    >
+                      Explore Marketplace
+                    </Link>
                 </div>
-                <div className="text-sm text-muted-foreground uppercase tracking-wider">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
+            </div>
+             <div className="md:w-1/2 mt-12 md:mt-0">
+                <img src="https://i.ibb.co/pnv1b9m/kenya-farm.jpg" alt="Sustainable farming" className="rounded-2xl shadow-2xl mx-auto" />
+             </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Why Choose AgriPulse?
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Built on cutting-edge technology with a focus on trust, transparency, and real environmental impact.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <div key={index} className="p-6 shadow-soft hover:shadow-medium transition-all duration-300 border-border/50 rounded-lg bg-white">
-                <div className="p-3 bg-primary/10 rounded-lg w-fit mb-4">
-                  <feature.icon className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
-              </div>
-            ))}
-          </div>
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why AgriPulse?</h2>
+            <p className="text-lg text-text-secondary max-w-3xl mx-auto mb-12">We replace bureaucracy and middlemen with code and transparency.</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <FeatureCard
+                    icon={<CheckCircleIcon className="w-10 h-10 text-primary" />}
+                    title="AI-Powered Verification"
+                    description="Our automated dMRV process uses Google Gemini to ensure every carbon credit is legitimate and trustworthy."
+                />
+                <FeatureCard
+                    icon={<ZapIcon className="w-10 h-10 text-primary" />}
+                    title="Instant Payments"
+                    description="Hedera's low-cost atomic swaps mean farmers get paid instantly, and investors get their credits immediately."
+                />
+                 <FeatureCard
+                    icon={<ShieldIcon className="w-10 h-10 text-primary" />}
+                    title="Radical Transparency"
+                    description="Every verification and transaction is recorded on the Hedera Consensus Service, creating an immutable audit trail."
+                />
+            </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-20 bg-muted/30">
+      {/* How It Works Section */}
+        <section className="py-20 bg-white">
+            <div className="container mx-auto px-4">
+                <div className="text-center mb-16">
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">A Simple Path to Impact</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <img src="https://i.ibb.co/N1p29M1/jordan-olives.jpg" alt="Farmer working" className="rounded-2xl shadow-xl w-full" />
+                    </div>
+                    <div>
+                        <h3 className="text-2xl font-bold text-primary mb-4">For Farmers</h3>
+                        <ul className="space-y-4">
+                            <StepItem number="1" text="Register your farm with our simple, guided process." />
+                            <StepItem number="2" text="Our AI verifies your data and calculates your carbon credits." />
+                            <StepItem number="3" text="Get listed on the marketplace and receive instant payments when your credits sell." />
+                        </ul>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mt-20">
+                     <div className="md:order-2">
+                        <img src="https://i.ibb.co/M9BPhH5/investor-meeting.jpg" alt="Investor meeting" className="rounded-2xl shadow-xl w-full" />
+                    </div>
+                    <div className="md:order-1 text-right">
+                        <h3 className="text-2xl font-bold text-primary mb-4">For Investors</h3>
+                         <ul className="space-y-4">
+                            <StepItem number="1" text="Create an account and browse verified, high-impact farm projects." />
+                            <StepItem number="2" text="Purchase credits instantly and securely with HBAR." />
+                            <StepItem number="3" text="Retire credits to offset your carbon footprint, all with on-chain proof." />
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+      {/* Final CTA */}
+      <section className="py-20 bg-primary/5">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              How It Works
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="p-8 shadow-soft text-center bg-white rounded-lg">
-              <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">
-                1
-              </div>
-              <h3 className="text-xl font-bold mb-3">Farmers Register</h3>
-              <p className="text-muted-foreground">
-                Sustainable farms register their projects and carbon-sequestering activities.
-              </p>
-            </div>
-
-            <div className="p-8 shadow-soft text-center bg-white rounded-lg">
-              <div className="w-16 h-16 bg-text-primary text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">
-                2
-              </div>
-              <h3 className="text-xl font-bold mb-3">On-Chain Verification (dMRV)</h3>
-              <p className="text-muted-foreground">
-                Our platform verifies the project's data and records the proof on the Hedera DLT.
-              </p>
-            </div>
-
-            <div className="p-8 shadow-soft text-center bg-white rounded-lg">
-              <div className="w-16 h-16 bg-accent text-accent-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">
-                3
-              </div>
-              <h3 className="text-xl font-bold mb-3">Trade Credits</h3>
-              <p className="text-muted-foreground">
-                Investors purchase verified credits instantly, funding real environmental projects.
-              </p>
-            </div>
+          <div className="p-12 bg-primary text-white text-center rounded-xl shadow-2xl">
+            <h2 className="text-4xl font-bold mb-4">Join the Movement.</h2>
+            <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+              Be a part of a fair, transparent, and effective carbon market.
+            </p>
+            <Link to="/auth" className="text-lg h-14 px-8 bg-white text-primary font-bold rounded-lg hover:bg-gray-200 transition-transform transform hover:scale-105 inline-flex items-center">
+                Get Started Today
+            </Link>
           </div>
         </div>
       </section>
     </div>
   );
 };
+
+const FeatureCard: React.FC<{ icon: React.ReactNode, title: string, description: string }> = ({ icon, title, description }) => (
+    <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-md">
+        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mx-auto mb-6">
+            {icon}
+        </div>
+        <h3 className="text-2xl font-bold mb-2">{title}</h3>
+        <p className="text-text-secondary">{description}</p>
+    </div>
+);
+
+const StepItem: React.FC<{ number: string, text: string }> = ({ number, text }) => (
+    <li className="flex items-start">
+        <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white font-bold mr-4">
+            {number}
+        </div>
+        <p className="text-lg text-text-secondary">{text}</p>
+    </li>
+);
 
 export default LandingPage;

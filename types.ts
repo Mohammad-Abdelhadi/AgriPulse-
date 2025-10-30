@@ -2,7 +2,6 @@ export enum AppRole {
     FARMER = 'FARMER',
     INVESTOR = 'INVESTOR',
     ADMIN = 'ADMIN',
-    SERVICE_PROVIDER = 'SERVICE_PROVIDER',
 }
 
 export interface CompanyProfile {
@@ -161,23 +160,6 @@ export interface Retirement {
   hashscanUrl: string;
 }
 
-export enum ServiceCategory {
-    EQUIPMENT = 'Equipment Rental',
-    LIVESTOCK = 'Livestock Services',
-    CONSULTATION = 'Expert Consultation',
-    LABOR = 'Manual Labor'
-}
-
-export interface Service {
-    id: string;
-    providerId: string;
-    name: string;
-    description: string;
-    category: ServiceCategory;
-    price: number;
-    priceUnit: 'per hour' | 'per day' | 'per item';
-}
-
 export interface PlatformInitializationDetails {
     tokenName: string;
     tokenSymbol: string;
@@ -200,7 +182,6 @@ export interface FarmContextType {
     retirements: Retirement[];
     farmerNfts: FarmerNft[];
     investorNfts: InvestorNft[];
-    services: Service[];
     platformTokenInfo: PlatformTokenInfo | null;
     farmerNftCollectionInfo: NftCollectionInfo | null;
     investorNftCollectionInfo: NftCollectionInfo | null;
@@ -222,7 +203,6 @@ export interface FarmContextType {
     createFarmNftCollection: (name: string, symbol: string, description: string) => Promise<void>;
     initializePlatform: (details: Omit<PlatformInitializationDetails, 'hcsTopicId'>) => Promise<void>;
     retireCredits: (amount: number) => Promise<void>;
-    addService: (serviceData: Omit<Service, 'id' | 'providerId'>) => Promise<boolean>;
     deletePlatformToken: () => Promise<void>;
     deleteNftCollection: (collectionId: string) => Promise<void>;
     deleteMultipleTokens: (tokenIds: string[], logCallback: (message: string) => void) => Promise<{ success: number; failed: number; summary: string }>;

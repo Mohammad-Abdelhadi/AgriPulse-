@@ -79,7 +79,6 @@ const WalletCleanupTool: React.FC = () => {
         setLoading(true);
         setLogs([]);
         
-        // FIX: Explicitly type `tokenIdsToProcess` as `string[]` to avoid type inference issues.
         const tokenIdsToProcess: string[] = Array.from(selectedTokens);
 
         try {

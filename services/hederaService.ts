@@ -59,9 +59,12 @@ class HederaService {
             console.log(`-----------------------------`);
 
             const transaction = new hederasdk.TransferTransaction()
-                .addHbarTransfer(investorAccountId, hederasdk.Hbar.fromTinybars(totalAmount).negated())
-                .addHbarTransfer(farmerAccountId, hederasdk.Hbar.fromTinybars(farmerShare))
-                .addHbarTransfer(adminAccountId, hederasdk.Hbar.fromTinybars(commission))
+                // FIX: Convert bigint to string for SDK compatibility
+                .addHbarTransfer(investorAccountId, hederasdk.Hbar.fromTinybars(totalAmount.toString()).negated())
+                // FIX: Convert bigint to string for SDK compatibility
+                .addHbarTransfer(farmerAccountId, hederasdk.Hbar.fromTinybars(farmerShare.toString()))
+                // FIX: Convert bigint to string for SDK compatibility
+                .addHbarTransfer(adminAccountId, hederasdk.Hbar.fromTinybars(commission.toString()))
                 .addTokenTransfer(tokenId, adminAccountId, -tokenAmount)
                 .addTokenTransfer(tokenId, investorAccountId, tokenAmount);
     
@@ -361,31 +364,31 @@ class HederaService {
         }
     }
 
-    async dissociateTokens(accountId: string, privateKeyString: string, tokenIds: string[]): Promise<{ hashscanUrl: string }> {
+    async dissociateTokens(accountId: string, privateKeyString: string, tokenIds: string[]): Promise<void> {
         console.log(`Attempting to DISSOCIATE account ${accountId} from ${tokenIds.length} tokens`);
-        try {
-            const client = hederasdk.Client.forTestnet();
-            const privateKey = hederasdk.PrivateKey.fromString(privateKeyString);
-            client.setOperator(accountId, privateKey);
-    
-            const transaction = await new hederasdk.TokenDissociateTransaction()
-                .setAccountId(accountId)
-                .setTokenIds(tokenIds)
-                .freezeWith(client);
-    
-            const signTx = await transaction.sign(privateKey);
-            const txResponse = await signTx.execute(client);
-            await txResponse.getReceipt(client);
-    
-            this.logHederaEntity('transaction', txResponse.transactionId);
-    
-            console.log(`Dissociation successful. Transaction ID: ${txResponse.transactionId.toString()}`);
-            return { hashscanUrl: `https://hashscan.io/testnet/transaction/${this.formatTxIdForUrl(txResponse.transactionId)}` };
-        } catch (err: any) {
-            console.error("Error dissociating tokens:", err);
-            if (err.message?.includes('ACCOUNT_DOES_NOT_OWN_NFT')) { throw new Error("Dissociation failed: You still own NFTs from one of these collections."); }
-            if (err.message?.includes('ACCOUNT_STILL_OWNS_NFTS')) { throw new Error("Dissociation failed: You still own NFTs from one of these collections."); }
-            throw new Error(err.message || "An error occurred during token dissociation.");
+        const client = hederasdk.Client.forTestnet();
+        const privateKey = hederasdk.PrivateKey.fromString(privateKeyString);
+        client.setOperator(accountId, privateKey);
+        
+        // Process one token at a time for resilience
+        for (const tokenId of tokenIds) {
+            try {
+                const transaction = await new hederasdk.TokenDissociateTransaction()
+                    .setAccountId(accountId)
+                    .setTokenIds([tokenId])
+                    .freezeWith(client);
+        
+                const signTx = await transaction.sign(privateKey);
+                const txResponse = await signTx.execute(client);
+                await txResponse.getReceipt(client);
+        
+                this.logHederaEntity('transaction', txResponse.transactionId);
+                console.log(`Successfully dissociated from ${tokenId}`);
+            } catch (err: any) {
+                console.error(`Failed to dissociate from ${tokenId}:`, err);
+                // Re-throw to be caught by the calling function, which handles logging
+                throw new Error(`Failed on ${tokenId}: ${err.message}`);
+            }
         }
     }
     

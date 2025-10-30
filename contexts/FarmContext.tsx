@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Farm, FarmStatus, Purchase, FarmerNft, AppRole, PlatformTokenInfo, NftCollectionInfo, FarmerNftLevel, Retirement, InvestorNft, InvestorNftLevel, Service, FarmContextType, User, PlatformInitializationDetails } from '../types';
+import { Farm, FarmStatus, Purchase, FarmerNft, AppRole, PlatformTokenInfo, NftCollectionInfo, FarmerNftLevel, Retirement, InvestorNft, InvestorNftLevel, FarmContextType, User, PlatformInitializationDetails } from '../types';
 import { useAuth } from './AuthContext';
 import { hederaService } from '../services/hederaService';
 import { useNotification } from './NotificationContext';
@@ -13,7 +13,6 @@ const initialFarmerNfts: FarmerNft[] = [];
 const initialInvestorNfts: InvestorNft[] = [];
 const initialPurchases: Purchase[] = [];
 const initialRetirements: Retirement[] = [];
-const initialServices: Service[] = [];
 
 type RegisterFarmData = Omit<Farm, 'id' | 'farmerId' | 'farmerName' | 'farmerHederaAccountId' | 'totalTons' | 'availableTons' | 'status' | 'investorCount' | 'certificateIpfsUrl'>;
 
@@ -42,7 +41,6 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [retirements, setRetirements] = useState<Retirement[]>([]);
     const [farmerNfts, setFarmerNfts] = useState<FarmerNft[]>([]);
     const [investorNfts, setInvestorNfts] = useState<InvestorNft[]>([]);
-    const [services, setServices] = useState<Service[]>([]);
     const [platformTokenInfo, setPlatformTokenInfo] = useState<PlatformTokenInfo | null>(null);
     const [farmerNftCollectionInfo, setFarmerNftCollectionInfo] = useState<NftCollectionInfo | null>(null);
     const [investorNftCollectionInfo, setInvestorNftCollectionInfo] = useState<NftCollectionInfo | null>(null);
@@ -70,7 +68,6 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setRetirements(safeJsonParse('agripulse_retirements', initialRetirements));
         setFarmerNfts(safeJsonParse('agripulse_farmer_nfts', initialFarmerNfts));
         setInvestorNfts(safeJsonParse('agripulse_investor_nfts', initialInvestorNfts));
-        setServices(safeJsonParse('agripulse_services', initialServices));
         setPlatformTokenInfo(safeJsonParse<PlatformTokenInfo | null>('agripulse_platform_token_info', null));
         setFarmerNftCollectionInfo(safeJsonParse<NftCollectionInfo | null>('agripulse_farmer_nft_collection_info', null));
         setInvestorNftCollectionInfo(safeJsonParse<NftCollectionInfo | null>('agripulse_investor_nft_collection_info', null));
@@ -95,7 +92,6 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { localStorage.setItem('agripulse_retirements', JSON.stringify(retirements)); }, [retirements]);
     useEffect(() => { localStorage.setItem('agripulse_farmer_nfts', JSON.stringify(farmerNfts)); }, [farmerNfts]);
     useEffect(() => { localStorage.setItem('agripulse_investor_nfts', JSON.stringify(investorNfts)); }, [investorNfts]);
-    useEffect(() => { localStorage.setItem('agripulse_services', JSON.stringify(services)); }, [services]);
     useEffect(() => { localStorage.setItem('agripulse_platform_token_info', JSON.stringify(platformTokenInfo)); }, [platformTokenInfo]);
     useEffect(() => { localStorage.setItem('agripulse_farmer_nft_collection_info', JSON.stringify(farmerNftCollectionInfo)); }, [farmerNftCollectionInfo]);
     useEffect(() => { localStorage.setItem('agripulse_investor_nft_collection_info', JSON.stringify(investorNftCollectionInfo)); }, [investorNftCollectionInfo]);
@@ -134,18 +130,15 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             addNotification("Recording verification decision on-chain...", "info");
             
-            // Create a concise summary for the on-chain log to prevent message size errors.
-            // The full breakdown is not stored on-chain to respect HCS message size limits.
             const hcsSummaryMessage = {
                 farmId: farmId,
                 farmer: user.hederaAccountId,
                 decision: verificationResult.isApproved ? 'APPROVED' : 'REJECTED',
                 score: verificationResult.score,
-                reason: verificationResult.reason, // The reason is already a concise summary.
+                reason: verificationResult.reason,
                 timestamp: new Date().toISOString(),
             };
 
-            // Use compact JSON stringifying to save space.
             const finalMessageString = JSON.stringify(hcsSummaryMessage);
             
             const hcsResponse = await hederaService.submitHcsMessage(hcsTopicId, finalMessageString, adminUser.hederaAccountId, adminUser.hederaPrivateKey);
@@ -160,37 +153,14 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     certificateIpfsUrl = `${DEDICATED_IPFS_GATEWAY_URL}${certCid}`;
                 }
 
-
-                const farmOffChainData = {
-                    name: farmData.name,
-                    story: farmData.story,
-                    location: farmData.location,
-                    cropType: farmData.cropType,
-                    landArea: farmData.landArea,
-                    areaUnit: farmData.areaUnit,
-                    practices: farmData.practices.map(pId => PRACTICES.find(p => p.id === pId)?.name || pId),
-                    certificateIpfsUrl: certificateIpfsUrl,
-                };
+                const farmOffChainData = { name: farmData.name, story: farmData.story, location: farmData.location, cropType: farmData.cropType, landArea: farmData.landArea, areaUnit: farmData.areaUnit, practices: farmData.practices.map(pId => PRACTICES.find(p => p.id === pId)?.name || pId), certificateIpfsUrl };
                 const farmDataCid = await pinataService.uploadJsonToIpfs(farmOffChainData);
-
                 const practicesString = farmData.practices.map(pId => PRACTICES.find(p => p.id === pId)?.name || pId).join(', ');
 
                 const nftMetadata = {
-                    name: `AgriPulse Farm Certificate: ${farmData.name}`,
-                    description: `A unique, on-chain certificate verifying that "${farmData.name}" has been approved on the AgriPulse platform. This NFT represents the farm's identity and its commitment to sustainable agriculture. Full story: ${farmData.story}`,
-                    image: UNIFIED_NFT_IMAGE_URL,
+                    name: `AgriPulse Farm Certificate: ${farmData.name}`, description: `A unique, on-chain certificate verifying that "${farmData.name}" has been approved on the AgriPulse platform. This NFT represents the farm's identity and its commitment to sustainable agriculture. Full story: ${farmData.story}`, image: UNIFIED_NFT_IMAGE_URL,
                     attributes: [
-                        { "trait_type": "Farm ID", "value": farmId },
-                        { "trait_type": "Farmer Account", "value": user.hederaAccountId },
-                        { "trait_type": "Location", "value": farmData.location },
-                        { "trait_type": "Crop Type", "value": farmData.cropType },
-                        { "trait_type": "Land Area", "value": `${farmData.landArea} ${farmData.areaUnit}(s)` },
-                        { "trait_type": "Sustainable Practices", "value": practicesString },
-                        { "trait_type": "Est. Annual Credits", "value": `${calculatedTotalTons} CO₂e` },
-                        { "trait_type": "Price per Credit", "value": `$${farmData.pricePerTon.toFixed(2)}` },
-                        { "trait_type": "Approval Score", "value": verificationResult.score },
-                        { "trait_type": "dMRV HCS Log", "value": hcsResponse.hashscanUrl },
-                        { "trait_type": "Full Data CID", "value": `ipfs://${farmDataCid}` },
+                        { "trait_type": "Farm ID", "value": farmId }, { "trait_type": "Farmer Account", "value": user.hederaAccountId }, { "trait_type": "Location", "value": farmData.location }, { "trait_type": "Crop Type", "value": farmData.cropType }, { "trait_type": "Land Area", "value": `${farmData.landArea} ${farmData.areaUnit}(s)` }, { "trait_type": "Sustainable Practices", "value": practicesString }, { "trait_type": "Est. Annual Credits", "value": `${calculatedTotalTons} CO₂e` }, { "trait_type": "Price per Credit", "value": `$${farmData.pricePerTon.toFixed(2)}` }, { "trait_type": "Approval Score", "value": verificationResult.score }, { "trait_type": "dMRV HCS Log", "value": hcsResponse.hashscanUrl }, { "trait_type": "Full Data CID", "value": `ipfs://${farmDataCid}` },
                          ...(certificateIpfsUrl ? [{ "trait_type": "Ownership Certificate", "value": certificateIpfsUrl }] : [])
                     ]
                 };
@@ -198,29 +168,14 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 const onChainMetadataUrl = `ipfs://${metadataCid}`;
                 
                 addNotification("Minting Farm Verification NFT...", "info");
-                const nftResponse = await hederaService.mintAndTransferNft(
-                    farmNftCollectionInfo.id, adminUser.hederaAccountId, adminUser.hederaPrivateKey,
-                    user.hederaAccountId, onChainMetadataUrl
-                );
+                const nftResponse = await hederaService.mintAndTransferNft(farmNftCollectionInfo.id, adminUser.hederaAccountId, adminUser.hederaPrivateKey, user.hederaAccountId, onChainMetadataUrl);
     
                 addNotification("Minting new carbon credits to treasury...", "info");
-                const mintResponse = await hederaService.mintFungibleTokens(
-                    platformTokenInfo.id,
-                    calculatedTotalTons,
-                    adminUser.hederaAccountId,
-                    adminUser.hederaPrivateKey
-                );
+                const mintResponse = await hederaService.mintFungibleTokens(platformTokenInfo.id, calculatedTotalTons, adminUser.hederaAccountId, adminUser.hederaPrivateKey);
                 setPlatformTokenInfo(prev => prev ? ({ ...prev, totalSupply: mintResponse.newTotalSupply }) : null);
 
                 const newFarm: Farm = {
-                    ...farmData,
-                    id: farmId, farmerId: user.id, farmerName: user.email, farmerHederaAccountId: user.hederaAccountId,
-                    totalTons: calculatedTotalTons, availableTons: calculatedTotalTons, status: FarmStatus.APPROVED, investorCount: 0,
-                    hederaTokenId: platformTokenInfo.id, approvalDate: new Date().toISOString(), approvalScore: verificationResult.score,
-                    farmNftTokenId: farmNftCollectionInfo.id, farmNftSerialNumber: nftResponse.serialNumber, farmNftHashscanUrl: nftResponse.hashscanUrl,
-                    farmNftMetadataUrl: onChainMetadataUrl,
-                    hcsLog: hcsResponse.hashscanUrl,
-                    certificateIpfsUrl: certificateIpfsUrl,
+                    ...farmData, id: farmId, farmerId: user.id, farmerName: user.email, farmerHederaAccountId: user.hederaAccountId, totalTons: calculatedTotalTons, availableTons: calculatedTotalTons, status: FarmStatus.APPROVED, investorCount: 0, hederaTokenId: platformTokenInfo.id, approvalDate: new Date().toISOString(), approvalScore: verificationResult.score, farmNftTokenId: farmNftCollectionInfo.id, farmNftSerialNumber: nftResponse.serialNumber, farmNftHashscanUrl: nftResponse.hashscanUrl, farmNftMetadataUrl: onChainMetadataUrl, hcsLog: hcsResponse.hashscanUrl, certificateIpfsUrl: certificateIpfsUrl,
                 };
                 
                 setFarms(prev => [...prev, newFarm]);
@@ -229,11 +184,7 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
             } else {
                 const newFarm: Farm = {
-                    ...farmData,
-                    id: farmId, farmerId: user.id, farmerName: user.email, farmerHederaAccountId: user.hederaAccountId,
-                    totalTons: calculatedTotalTons, availableTons: 0, status: FarmStatus.REJECTED, investorCount: 0,
-                    hederaTokenId: platformTokenInfo.id, rejectionReason: verificationResult.reason, approvalScore: verificationResult.score,
-                    hcsLog: hcsResponse.hashscanUrl
+                    ...farmData, id: farmId, farmerId: user.id, farmerName: user.email, farmerHederaAccountId: user.hederaAccountId, totalTons: calculatedTotalTons, availableTons: 0, status: FarmStatus.REJECTED, investorCount: 0, hederaTokenId: platformTokenInfo.id, rejectionReason: verificationResult.reason, approvalScore: verificationResult.score, hcsLog: hcsResponse.hashscanUrl
                 };
     
                 setFarms(prev => [...prev, newFarm]);
@@ -281,96 +232,85 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         try {
             const totalPriceInTinybars = Math.ceil(totalPriceInHbar * 100_000_000);
-            const swapResponse = await hederaService.executeAtomicSwap(
-                user.hederaAccountId, user.hederaPrivateKey, farm.farmerHederaAccountId,
-                adminUser.hederaAccountId, adminUser.hederaPrivateKey, totalPriceInTinybars,
-                platformTokenInfo.id, tons
-            );
+            const swapResponse = await hederaService.executeAtomicSwap(user.hederaAccountId, user.hederaPrivateKey, farm.farmerHederaAccountId, adminUser.hederaAccountId, adminUser.hederaPrivateKey, totalPriceInTinybars, platformTokenInfo.id, tons);
 
             const newPurchase: Purchase = {
-                id: `purchase_${Date.now()}`, farmId, investorId: user.id, tonsPurchased: tons, totalPrice: totalPriceUsd, totalPriceInHbar: totalPriceInHbar,
-                purchaseDate: new Date().toISOString(), hashscanUrl: swapResponse.hashscanUrl,
-                tokenTransferStatus: 'COMPLETED', tokenTransferTxUrl: swapResponse.hashscanUrl,
-                investorEmail: user.email,
+                id: `purchase_${Date.now()}`, farmId, investorId: user.id, tonsPurchased: tons, totalPrice: totalPriceUsd, totalPriceInHbar: totalPriceInHbar, purchaseDate: new Date().toISOString(), hashscanUrl: swapResponse.hashscanUrl, tokenTransferStatus: 'COMPLETED', tokenTransferTxUrl: swapResponse.hashscanUrl, investorEmail: user.email,
             };
             setPurchases(prev => [...prev, newPurchase]);
             setFarms(prev => prev.map(f => f.id === farmId ? { ...f, availableTons: f.availableTons - tons } : f));
             
             addNotification(`Purchase and credit transfer successful!`, 'success', swapResponse.hashscanUrl);
             
-            // Wait for mirror node to update, then refresh balance
             await new Promise(resolve => setTimeout(resolve, 4000));
             await refreshUserBalance();
 
             addNotification("Checking for achievement NFTs...", "info");
             
-            const getUser = (id: string): User | undefined => {
-                const userEntry = Object.values(allUsers).find((u: any) => u.id === id) as User;
-                return userEntry;
-            }
+            const getUser = (id: string): User | undefined => Object.values(allUsers).find((u: any) => u.id === id) as User;
             const investor = getUser(newPurchase.investorId);
+            const farmer = getUser(farm.farmerId);
 
-            const investorLevel = [...INVESTOR_IMPACT_LEVELS].reverse().find(l => tons >= l.tonsThreshold);
-            if (investorLevel && investorNftCollectionInfo && investor?.hederaAccountId) {
-                try {
-                    const investorMetadataObject = geminiService.generateNftMetadata({
-                        purchaseId: newPurchase.id, farmName: farm.name, tons, nftType: 'investor', recipientEmail: investor.email, imageUrl: UNIFIED_NFT_IMAGE_URL,
-                        investorAccountId: investor.hederaAccountId,
-                        farmerAccountId: farm.farmerHederaAccountId
-                    });
-                    
-                    addNotification('Uploading investor metadata to IPFS...', 'info');
-                    const investorMetadataCid = await pinataService.uploadJsonToIpfs(investorMetadataObject);
-                    const investorOnChainMetadata = `ipfs://${investorMetadataCid}`;
-
-                    addNotification('Minting investor NFT on Hedera...', 'info');
-                    const investorNftResponse = await hederaService.mintAndTransferNft(investorNftCollectionInfo.id, adminUser.hederaAccountId, adminUser.hederaPrivateKey, investor.hederaAccountId, investorOnChainMetadata);
-                    
-                    const newInvestorNft: InvestorNft = {
-                        id: `inft_${Date.now()}`, investorId: newPurchase.investorId, investorHederaAccountId: investor.hederaAccountId, nftLevelId: investorLevel.id, 
-                        mintDate: new Date().toISOString(), hederaTokenId: investorNftCollectionInfo.id,
-                        hederaSerialNumber: investorNftResponse.serialNumber, hashscanUrl: investorNftResponse.hashscanUrl,
-                        purchaseId: newPurchase.id, tons: tons, farmName: farm.name,
-                        metadataUrl: investorOnChainMetadata
-                    };
-                    setInvestorNfts(prev => [...prev, newInvestorNft]);
-                    addNotification(`Awarded ${investorLevel.name} to investor!`, 'success', investorNftResponse.hashscanUrl);
-                } catch (e: any) {
-                     addNotification(`Failed to mint investor NFT: ${e.message}`, "error");
-                }
+            let investorNftImageUrl = UNIFIED_NFT_IMAGE_URL;
+            try {
+                addNotification("Generating unique investor NFT certificate with AI...", "info");
+                const generatedImageB64 = await geminiService.generateInvestorNftImage(tons);
+                addNotification("Uploading unique artwork to IPFS...", "info");
+                const nftImageCid = await pinataService.uploadFileToIpfs(generatedImageB64, `investor_nft_${newPurchase.id}.png`, 'image/png');
+                investorNftImageUrl = `${DEDICATED_IPFS_GATEWAY_URL}${nftImageCid}`;
+            } catch (e: any) {
+                addNotification(`Investor AI artwork failed, using default image. Reason: ${e.message}`, "error");
             }
             
+            const investorLevel = [...INVESTOR_IMPACT_LEVELS].reverse().find(l => tons >= l.tonsThreshold);
+            if (investorLevel && investorNftCollectionInfo && investor?.hederaAccountId) {
+                const investorMetadataObject = {
+                    name: `Impact Certificate: ${tons} Tons`, description: `A tokenized certificate representing a landmark purchase of ${tons} tons of CO₂e credits from the farm "${farm.name}".`, image: investorNftImageUrl,
+                    attributes: [
+                        { "trait_type": "Farm", "value": farm.name }, { "trait_type": "Tons Purchased", "value": tons.toString() }, { "trait_type": "Purchase ID", "value": newPurchase.id }, { "trait_type": "Investor Account", "value": investor.hederaAccountId }, { "trait_type": "Farmer Account", "value": farm.farmerHederaAccountId },
+                    ]
+                };
+                addNotification('Uploading investor metadata to IPFS...', 'info');
+                const investorMetadataCid = await pinataService.uploadJsonToIpfs(investorMetadataObject);
+                const investorOnChainMetadata = `ipfs://${investorMetadataCid}`;
+                addNotification('Minting investor NFT on Hedera...', 'info');
+                const investorNftResponse = await hederaService.mintAndTransferNft(investorNftCollectionInfo.id, adminUser.hederaAccountId, adminUser.hederaPrivateKey, investor.hederaAccountId, investorOnChainMetadata);
+                const newInvestorNft: InvestorNft = {
+                    id: `inft_${Date.now()}`, investorId: newPurchase.investorId, investorHederaAccountId: investor.hederaAccountId, nftLevelId: investorLevel.id, mintDate: new Date().toISOString(), hederaTokenId: investorNftCollectionInfo.id, hederaSerialNumber: investorNftResponse.serialNumber, hashscanUrl: investorNftResponse.hashscanUrl, purchaseId: newPurchase.id, tons: tons, farmName: farm.name, metadataUrl: investorOnChainMetadata
+                };
+                setInvestorNfts(prev => [...prev, newInvestorNft]);
+                addNotification(`Awarded ${investorLevel.name} to investor!`, 'success', investorNftResponse.hashscanUrl);
+            }
+            
+            let farmerNftImageUrl = UNIFIED_NFT_IMAGE_URL;
+             try {
+                addNotification("Generating unique farmer NFT badge with AI...", "info");
+                const generatedImageB64 = await geminiService.generateFarmerNftImage(tons);
+                addNotification("Uploading unique artwork to IPFS...", "info");
+                const nftImageCid = await pinataService.uploadFileToIpfs(generatedImageB64, `farmer_nft_${newPurchase.id}.png`, 'image/png');
+                farmerNftImageUrl = `${DEDICATED_IPFS_GATEWAY_URL}${nftImageCid}`;
+            } catch (e: any) {
+                addNotification(`Farmer AI artwork failed, using default image. Reason: ${e.message}`, "error");
+            }
+
             const farmerLevel = [...FARMER_LEGACY_LEVELS].reverse().find(l => tons >= l.tonsThreshold);
-            if (farmerLevel && farmerNftCollectionInfo) {
-                const farmer = getUser(farm.farmerId);
-                if (farmer && farmer.hederaAccountId) {
-                    try {
-                        const farmerMetadataObject = geminiService.generateNftMetadata({
-                            purchaseId: newPurchase.id, farmName: farm.name, tons, nftType: 'farmer', recipientEmail: investor?.email || 'N/A', imageUrl: UNIFIED_NFT_IMAGE_URL,
-                            investorAccountId: investor?.hederaAccountId || 'N/A',
-                            farmerAccountId: farmer.hederaAccountId
-                        });
-
-                        addNotification('Uploading farmer metadata to IPFS...', 'info');
-                        const farmerMetadataCid = await pinataService.uploadJsonToIpfs(farmerMetadataObject);
-                        const farmerOnChainMetadata = `ipfs://${farmerMetadataCid}`;
-
-                        addNotification('Minting farmer NFT on Hedera...', 'info');
-                        const farmerNftResponse = await hederaService.mintAndTransferNft(farmerNftCollectionInfo.id, adminUser.hederaAccountId, adminUser.hederaPrivateKey, farmer.hederaAccountId, farmerOnChainMetadata);
-
-                        const newFarmerNft: FarmerNft = {
-                            id: `fnft_${Date.now()}`, farmerId: farm.farmerId, farmerHederaAccountId: farm.farmerHederaAccountId, nftLevelId: farmerLevel.id,
-                            mintDate: new Date().toISOString(), hederaTokenId: farmerNftCollectionInfo.id,
-                            hederaSerialNumber: farmerNftResponse.serialNumber, hashscanUrl: farmerNftResponse.hashscanUrl,
-                            purchaseId: newPurchase.id, tons: tons, investorEmail: investor?.email || 'N/A',
-                            metadataUrl: farmerOnChainMetadata
-                        };
-                        setFarmerNfts(prev => [...prev, newFarmerNft]);
-                        addNotification(`Awarded ${farmerLevel.name} to farmer!`, 'success', farmerNftResponse.hashscanUrl);
-                    } catch (e: any) {
-                        addNotification(`Failed to mint farmer NFT: ${e.message}`, "error");
-                    }
-                }
+            if (farmerLevel && farmerNftCollectionInfo && farmer?.hederaAccountId) {
+                const farmerMetadataObject = {
+                    name: `Legacy Badge: ${tons} Tons`, description: `A tokenized badge awarded for a landmark sale of ${tons} tons of CO₂e credits to ${investor?.email || 'an investor'}.`, image: farmerNftImageUrl,
+                    attributes: [
+                        { "trait_type": "Farm", "value": farm.name }, { "trait_type": "Tons Sold", "value": tons.toString() }, { "trait_type": "Purchase ID", "value": newPurchase.id }, { "trait_type": "Investor Account", "value": investor?.hederaAccountId || 'N/A' }, { "trait_type": "Farmer Account", "value": farmer.hederaAccountId },
+                    ]
+                };
+                addNotification('Uploading farmer metadata to IPFS...', 'info');
+                const farmerMetadataCid = await pinataService.uploadJsonToIpfs(farmerMetadataObject);
+                const farmerOnChainMetadata = `ipfs://${farmerMetadataCid}`;
+                addNotification('Minting farmer NFT on Hedera...', 'info');
+                const farmerNftResponse = await hederaService.mintAndTransferNft(farmerNftCollectionInfo.id, adminUser.hederaAccountId, adminUser.hederaPrivateKey, farmer.hederaAccountId, farmerOnChainMetadata);
+                const newFarmerNft: FarmerNft = {
+                    id: `fnft_${Date.now()}`, farmerId: farm.farmerId, farmerHederaAccountId: farm.farmerHederaAccountId, nftLevelId: farmerLevel.id, mintDate: new Date().toISOString(), hederaTokenId: farmerNftCollectionInfo.id, hederaSerialNumber: farmerNftResponse.serialNumber, hashscanUrl: farmerNftResponse.hashscanUrl, purchaseId: newPurchase.id, tons: tons, investorEmail: investor?.email || 'N/A', metadataUrl: farmerOnChainMetadata
+                };
+                setFarmerNfts(prev => [...prev, newFarmerNft]);
+                addNotification(`Awarded ${farmerLevel.name} to farmer!`, 'success', farmerNftResponse.hashscanUrl);
             }
 
         } catch (e: any) {
@@ -540,29 +480,6 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setLoading(false);
         }
     };
-    
-    const addService = async (serviceData: Omit<Service, 'id' | 'providerId'>): Promise<boolean> => {
-        if (!user || user.role !== AppRole.SERVICE_PROVIDER) {
-            addNotification("Only service providers can list services.", "error");
-            return false;
-        }
-        setLoading(true);
-        try {
-            const newService: Service = {
-                ...serviceData,
-                id: `service_${Date.now()}`,
-                providerId: user.id,
-            };
-            setServices(prev => [...prev, newService]);
-            addNotification("Service listed successfully!", 'success');
-            return true;
-        } catch (e: any) {
-            addNotification(e.message || "Failed to add service.", "error");
-            return false;
-        } finally {
-            setLoading(false);
-        }
-    };
 
     // --- CLEANUP ---
     const deleteMultipleTokens = async (tokenIds: string[], logCallback: (message: string) => void): Promise<{ success: number; failed: number, summary: string }> => {
@@ -616,57 +533,50 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             return { success: 0, failed: tokenIds.length, summary: "Wallet not connected." };
         }
         
-        const allUsers = JSON.parse(localStorage.getItem('agripulse_users') || '{}');
-        const adminUser = Object.values(allUsers).find((u: any) => u.role === AppRole.ADMIN) as User;
-        if (!adminUser || !adminUser.hederaAccountId) {
-            logCallback("ERROR: Admin account not found for asset return.");
-            return { success: 0, failed: tokenIds.length, summary: "Admin account not found." };
-        }
+        let successCount = 0;
+        for (const tokenId of tokenIds) {
+            try {
+                logCallback(`Attempting to dissociate from ${tokenId}...`);
+                const allUsers = JSON.parse(localStorage.getItem('agripulse_users') || '{}');
+                const adminUser = Object.values(allUsers).find((u: any) => u.role === AppRole.ADMIN) as User;
+                if (!adminUser || !adminUser.hederaAccountId) {
+                    throw new Error("Admin account not found for asset return.");
+                }
 
-        try {
-            logCallback(`Checking balances for ${tokenIds.length} token(s)...`);
-            const balanceInfo = await hederaService.getRealAccountBalance(user.hederaAccountId);
-            const assetsToTransfer = [];
+                const balanceInfo = await hederaService.getRealAccountBalance(user.hederaAccountId);
+                const assetsToTransfer = [];
 
-            for (const tokenId of tokenIds) {
                 const tokenBalance = balanceInfo.tokens.find(t => t.tokenId === tokenId);
                 if (tokenBalance && tokenBalance.balance > 0) {
                     assetsToTransfer.push({ tokenId: tokenId, amount: tokenBalance.balance });
-                    logCallback(`Found ${tokenBalance.balance} of ${tokenId} to transfer back to admin.`);
+                    logCallback(`Found ${tokenBalance.balance} of ${tokenId} to transfer.`);
                 }
-
                 const nftSerials = await hederaService.getNftsForAccountInCollection(user.hederaAccountId, tokenId);
                 if (nftSerials.length > 0) {
                     assetsToTransfer.push({ tokenId: tokenId, serials: nftSerials.map(n => n.serial_number) });
-                    logCallback(`Found ${nftSerials.length} NFTs from ${tokenId} to transfer back to admin.`);
+                     logCallback(`Found ${nftSerials.length} NFTs from ${tokenId} to transfer.`);
                 }
+                if (assetsToTransfer.length > 0) {
+                    await hederaService.transferAssetsBackToAdmin(user.hederaAccountId, user.hederaPrivateKey, adminUser.hederaAccountId, assetsToTransfer);
+                    logCallback(`Assets for ${tokenId} transferred back to admin.`);
+                }
+
+                await hederaService.dissociateTokens(user.hederaAccountId, user.hederaPrivateKey, [tokenId]);
+                logCallback(`SUCCESS: Dissociated from ${tokenId}.`);
+                successCount++;
+            } catch (e: any)
+            {
+                logCallback(`FAILED to dissociate from ${tokenId}: ${e.message}`);
             }
-
-            if (assetsToTransfer.length > 0) {
-                logCallback(`Transferring ${assetsToTransfer.length} asset types back to treasury...`);
-                await hederaService.transferAssetsBackToAdmin(user.hederaAccountId, user.hederaPrivateKey, adminUser.hederaAccountId, assetsToTransfer);
-                logCallback(`Asset transfer complete.`);
-            } else {
-                logCallback(`No assets to transfer back.`);
-            }
-
-            logCallback(`Executing dissociation transaction...`);
-            await hederaService.dissociateTokens(user.hederaAccountId, user.hederaPrivateKey, tokenIds);
-            const summary = `Successfully dissociated from ${tokenIds.length} tokens.`;
-            logCallback(summary);
-            return { success: tokenIds.length, failed: 0, summary };
-
-        } catch (e: any) {
-            const summary = `FAILED: ${e.message}`;
-            logCallback(summary);
-            return { success: 0, failed: tokenIds.length, summary };
         }
+
+        const summary = `Operation Complete: ${successCount} dissociated, ${tokenIds.length - successCount} failed.`;
+        return { success: successCount, failed: tokenIds.length - successCount, summary };
     };
-    
 
     return (
         <FarmContext.Provider value={{
-            farms, purchases, retirements, farmerNfts, investorNfts, services, platformTokenInfo, 
+            farms, purchases, retirements, farmerNfts, investorNfts, platformTokenInfo, 
             farmerNftCollectionInfo, investorNftCollectionInfo, farmNftCollectionInfo, hcsTopicId,
             loading, error, hbarToUsdRate, userBalance, refreshUserBalance,
             registerFarm, purchaseCredits,
@@ -674,7 +584,7 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             createFarmerNftCollection, associateWithFarmerNftCollection,
             createInvestorNftCollection, associateWithInvestorNftCollection,
             createFarmNftCollection, initializePlatform,
-            retireCredits, addService, deletePlatformToken, deleteNftCollection,
+            retireCredits, deletePlatformToken, deleteNftCollection,
             deleteMultipleTokens, dissociateMultipleTokens
         }}>
             {children}
@@ -685,7 +595,7 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 export const useFarm = (): FarmContextType => {
     const context = useContext(FarmContext);
     if (context === undefined) {
-        throw new Error('useFarm must be used within a FarmProvider');
+        throw new Error('useFarm must be used within a Farm-context-provider');
     }
     return context;
 };

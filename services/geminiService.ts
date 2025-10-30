@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { PRACTICES } from '../constants';
 import { Farm } from "../types";
 
@@ -11,11 +11,6 @@ const API_KEYS = [
 let currentKeyIndex = 0;
 let ai: GoogleGenAI | null = null;
 
-/**
- * Lazily initializes and returns the GoogleGenAI client instance.
- * Supports rotating to a fallback key if the current one is rate-limited.
- * @param forceRotate If true, moves to the next key in the API_KEYS array.
- */
 const getAiClient = (forceRotate: boolean = false): GoogleGenAI => {
     if (forceRotate && API_KEYS.length > 1) {
         currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
@@ -28,22 +23,15 @@ const getAiClient = (forceRotate: boolean = false): GoogleGenAI => {
         if (!apiKey) {
             throw new Error("No valid Gemini API key is available.");
         }
-        // Initialize the Google GenAI client with the current key.
         ai = new GoogleGenAI({ apiKey });
     }
     return ai;
 };
 
-
-/**
- * A higher-order function that wraps a Gemini API call with retry logic.
- * If the initial call fails with a rate-limit error, it rotates the API key and retries once.
- * @param apiCall The function that makes the actual call to the Gemini API.
- * @param attempt The current attempt number to prevent infinite recursion.
- */
 async function withApiKeyRotation<T>(apiCall: (client: GoogleGenAI) => Promise<T>, attempt: number = 0): Promise<T> {
     try {
-        const client = getAiClient();
+        // Use a new client for each attempt in case the key needs to be rotated
+        const client = getAiClient(attempt > 0);
         return await apiCall(client);
     } catch (error: any) {
         let errorDetails = {};
@@ -59,94 +47,66 @@ async function withApiKeyRotation<T>(apiCall: (client: GoogleGenAI) => Promise<T
         const status = (errorDetails as any)?.error?.status;
         const isRateLimitError = statusCode === 429 || status === 'RESOURCE_EXHAUSTED';
 
-        // Check if it's a rate limit error and if we have more keys to try.
         if (isRateLimitError && attempt < API_KEYS.length - 1) {
             console.warn(`API rate limit on key index ${currentKeyIndex}. Switching to fallback.`);
-            return withApiKeyRotation(apiCall, attempt + 1); // Recursively retry with the next key
+            return withApiKeyRotation(apiCall, attempt + 1);
         } else {
             if (isRateLimitError) {
-                console.error("All available API keys are rate-limited. Please try again later.");
+                const finalError = new Error("All available API keys are rate-limited. Please try again later.");
+                console.error(finalError.message, error);
+                throw finalError;
             }
-            throw error; // Re-throw the error if it's not a rate limit issue or if all keys have failed.
+            throw error;
         }
     }
 }
 
-
-interface NftMetadataInput {
-    purchaseId: string;
-    farmName: string;
-    tons: number;
-    nftType: 'investor' | 'farmer';
-    recipientEmail: string;
-    imageUrl: string; // Now requires the IPFS image URL
-    investorAccountId: string;
-    farmerAccountId: string;
-}
-
-// Helper to truncate strings with ellipsis
-const truncate = (str: string, maxLength: number) => {
-    if (str.length <= maxLength) return str;
-    return str.substring(0, maxLength - 3) + '...';
+const generateImage = async (prompt: string): Promise<string> => {
+    console.log("Generating NFT Image with Gemini using a text-only prompt...");
+    try {
+      return await withApiKeyRotation(async (client) => {
+        const textPart = { text: prompt };
+  
+        const response = await client.models.generateContent({
+          model: 'gemini-2.5-flash-image',
+          contents: { parts: [textPart] },
+          config: {
+            responseModalities: [Modality.IMAGE],
+          },
+        });
+  
+        for (const part of response.candidates[0].content.parts) {
+          if (part.inlineData) {
+            console.log("Successfully generated NFT image.");
+            return part.inlineData.data;
+          }
+        }
+        throw new Error("Gemini did not return an image.");
+      });
+    } catch (error) {
+      console.error("Error generating image with Gemini:", error);
+      throw error;
+    }
 };
 
 export const geminiService = {
-    /**
-     * Generates farm data using Gemini with a structured JSON output.
-     */
-    async generateFarmData(): Promise<any> {
-        console.log("Generating farm data with Gemini...");
-        try {
-            return await withApiKeyRotation(async (client) => {
-                const practiceIds = PRACTICES.map(p => p.id).join(', ');
-                const prompt = `Generate realistic data for a sustainable farm. The farm should be located in the Middle East or Africa. Provide the following fields in JSON format: name (string), location (string, e.g., City, Country), story (string, 2-3 sentences), landArea (number between 10 and 200), areaUnit ('dunum' or 'hectare'), cropType (string), practices (an array of 2-3 practice IDs from this list: ${practiceIds}), and pricePerTon (number between 0.5 and 1.5, with 2 decimal places).`;
-
-                const responseSchema = {
-                    type: Type.OBJECT,
-                    properties: {
-                        name: { type: Type.STRING },
-                        location: { type: Type.STRING },
-                        story: { type: Type.STRING },
-                        landArea: { type: Type.NUMBER },
-                        areaUnit: { type: Type.STRING },
-                        cropType: { type: Type.STRING },
-                        practices: {
-                            type: Type.ARRAY,
-                            items: { type: Type.STRING }
-                        },
-                        pricePerTon: { type: Type.NUMBER },
-                    }
-                };
-
-                const response = await client.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: prompt,
-                    config: {
-                        responseMimeType: "application/json",
-                        responseSchema: responseSchema,
-                    },
-                });
-                
-                const farmData = JSON.parse(response.text);
-                console.log("Successfully generated farm data:", farmData);
-                return farmData;
-            });
-        } catch (error) {
-            console.error("Error generating farm data with Gemini:", error);
-            throw new Error("Failed to generate farm data.");
-        }
+    async generateInvestorNftImage(tons: number): Promise<string> {
+        const prompt = `Create a visually striking digital certificate for a carbon credit NFT from AgriPulse. The design should be clean, professional, and trustworthy, with a green and white color palette inspired by nature and technology. The image MUST prominently and clearly display the text '${tons} TONS PURCHASED'. Do not include any logos or external branding unless specifically asked.`;
+        return generateImage(prompt);
     },
 
-    /**
-     * Analyzes farm data for plausibility and consistency using Gemini.
-     */
+    async generateFarmerNftImage(tons: number): Promise<string> {
+        const prompt = `Create a visually striking digital award badge for a farmer's achievement NFT from AgriPulse. The design should feel prestigious, like a medal of honor, with a green and white color palette inspired by nature and sustainability. The image MUST prominently and clearly display the text '${tons} TONS SOLD'. Do not include any logos or external branding unless specifically asked.`;
+        return generateImage(prompt);
+    },
+    
     async analyzeFarmData(farmData: { name: string, location: string, story: string, cropType: string, landArea: number, areaUnit: string, practices: string[] }): Promise<{ plausibilityScore: number, consistencyScore: number, justification: string }> {
         console.log("Analyzing farm data quality with Gemini...");
         try {
             return await withApiKeyRotation(async (client) => {
                 const dataToAnalyze = {
                     ...farmData,
-                    practices: farmData.practices.map(pId => PRACTICES.find(p => p.id === pId)?.name || pId) // Convert IDs to names for clarity
+                    practices: farmData.practices.map(pId => PRACTICES.find(p => p.id === pId)?.name || pId)
                 };
 
                 const prompt = `
@@ -240,35 +200,4 @@ export const geminiService = {
             throw new Error("AI certificate analysis failed.");
         }
     },
-
-
-    /**
-     * Generates a standards-compliant NFT metadata JSON object.
-     */
-    generateNftMetadata({ purchaseId, farmName, tons, nftType, recipientEmail, imageUrl, investorAccountId, farmerAccountId }: NftMetadataInput): object {
-        
-        const shortPurchaseId = purchaseId.split('_').pop() || '';
-        const name = nftType === 'investor' 
-            ? `Impact Certificate #${shortPurchaseId}`
-            : `Legacy Badge #${shortPurchaseId}`;
-        
-        const description = nftType === 'investor'
-            ? `A tokenized certificate representing a landmark purchase of ${tons} tons of CO₂e credits from the farm "${farmName}".`
-            : `A tokenized badge awarded for a landmark sale of ${tons} tons of CO₂e credits to ${truncate(recipientEmail, 25)}.`;
-
-        const metadata = {
-            name,
-            description,
-            image: imageUrl, 
-            attributes: [
-                { "trait_type": "Farm", "value": farmName },
-                { "trait_type": "Tons", "value": tons.toString() },
-                { "trait_type": "Purchase ID", "value": purchaseId },
-                { "trait_type": "Investor Account ID", "value": investorAccountId },
-                { "trait_type": "Farmer Account ID", "value": farmerAccountId },
-            ]
-        };
-        
-        return metadata;
-    }
 };

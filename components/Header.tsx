@@ -30,13 +30,11 @@ const Header: React.FC = () => {
         { path: '/admin', label: 'Admin Dashboard' },
         { path: '/transaction-history', label: 'Platform History' }
     ];
-    const serviceProviderLinks = [{ path: '/service-provider', label: 'My Services' }];
 
     let links = [...baseLinks];
     if (user?.role === AppRole.FARMER) links.push(...farmerLinks);
     if (user?.role === AppRole.INVESTOR) links.push(...investorLinks);
     if (user?.role === AppRole.ADMIN) links.push(...adminLinks);
-    if (user?.role === AppRole.SERVICE_PROVIDER) links.push(...serviceProviderLinks);
 
     const activeLinkClass = "text-primary font-bold";
     const inactiveLinkClass = "text-text-primary hover:text-primary transition-colors";
