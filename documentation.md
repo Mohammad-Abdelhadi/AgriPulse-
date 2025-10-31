@@ -48,6 +48,8 @@ For a guided experience, use these pre-configured accounts. All are connected to
 ### **Step 1: Admin - Initialize the Platform**
 
 1.  **Log In as Admin.**
+-   **Admin:** `admin@admin.com` / `admin123`
+
 2.  Navigate to the **Admin Dashboard**.
 3.  Click **Initialize Platform** and confirm. This single action creates all required on-chain assets: the fungible carbon credit token, the three NFT collections, and the HCS topic for the audit trail.
 
@@ -63,6 +65,7 @@ For a guided experience, use these pre-configured accounts. All are connected to
 ### **Step 2: Farmer - Create the Supply**
 
 1.  **Log Out** and **Log In as Farmer.**
+-   **Farmer:** `farmer@farm.com` / `farmer123`
 2.  Go to **My Farm** and complete the one-time **Step 1: Associate Wallet** setup.
 3.  **Register a Valid Farm:**
     -   Click **Register New Farm**.
@@ -89,6 +92,7 @@ For a guided experience, use these pre-configured accounts. All are connected to
 ### **Step 3: Investor - Purchase Credits & Verify**
 
 1.  **Log Out** and **Log In as Investor.**
+-   **Investor:** `inv@inv.com` / `investor123`
 2.  Go to **My Dashboard** and click **Complete Account Setup** for the one-time wallet association.
 3.  Navigate to the **Marketplace**.
 4.  Find the **"Golden Grain Oasis"** farm and click **Purchase Credits**.
