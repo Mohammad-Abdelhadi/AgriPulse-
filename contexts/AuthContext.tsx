@@ -44,7 +44,7 @@ const setupInitialUsers = () => {
                 email: 'farmer@farm.com',
                 password: 'farmer123',
                 role: AppRole.FARMER,
-                hederaAccountId: '0.0.7099230',
+                hederaAccountId: '0.0.7054620',
                 hederaPrivateKey: '302e020100300506032b65700422042020e48e9ebc896eb094ea9122b8c68e594fe5331c703bdee9913a6e5486f2442d'
             }
         };
