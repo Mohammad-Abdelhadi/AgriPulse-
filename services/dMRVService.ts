@@ -23,10 +23,16 @@ export const dMRVService = {
 
         // 1. Data Completeness Score (Max 15)
         let dataScore = 0;
-        let dataReason = "Incomplete data.";
         if (farmData.location?.length > 5) dataScore += 5;
         if (farmData.story?.length > 50) dataScore += 5;
         if (farmData.cropType?.length > 2) dataScore += 5;
+        
+        let dataReason = "Incomplete data fields.";
+        if (dataScore === 15) {
+            dataReason = "All data fields are complete and meet length requirements.";
+        } else if (dataScore > 0) {
+            dataReason = "Some data fields are complete.";
+        }
         breakdown['dataCompleteness'] = { score: dataScore, max: 15, reason: dataReason };
         totalScore += dataScore;
         
