@@ -81,7 +81,7 @@ const InvestorJourney: React.FC = () => {
             </section>
             
             <section>
-                <SectionHeader title="Investing in Verifiable Impact" subtitle="AgriPulse leverages blockchain and AI to provide radical transparency and ensure your investment makes a real difference."/>
+                <SectionHeader title="Investing in Verifiable Impact" subtitle="AgriPulse leverages Hedera Hashgraph and AI to provide radical transparency and ensure your investment makes a real difference."/>
                 <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                     <FeatureCard icon={ShieldIcon} title="On-Chain Audit Trail">Every farm verification is logged on the Hedera Consensus Service, providing an immutable, publicly auditable proof of authenticity.</FeatureCard>
                     <FeatureCard icon={ZapIcon} title="Efficient & Direct Funding">Hedera's atomic swaps enable instant, low-fee transactions that send the vast majority of your funds directly to the farmer.</FeatureCard>

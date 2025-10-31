@@ -34,7 +34,7 @@ const LandingPage = () => {
                 </span>
               </h1>
               <p className="text-lg text-text-secondary leading-relaxed max-w-xl mx-auto md:mx-0">
-                Connecting sustainable farmers with ESG-focused investors through AI-verified carbon credits on the blockchain. Real impact, radical transparency.
+                Connecting sustainable farmers with ESG-focused investors through AI-verified carbon credits on the Hedera Hashgraph. Real impact, radical transparency.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <Link to="/auth" className="group inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white bg-primary rounded-lg shadow-lg hover:bg-primary-dark transition-transform transform hover:scale-105">
@@ -121,7 +121,7 @@ const LandingPage = () => {
           <div className="text-center mb-16 space-y-4">
              <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-sm font-semibold text-primary border border-primary/20">Our Solution</span>
             <h2 className="text-4xl md:text-5xl font-bold">
-              Blockchain-Verified Carbon Trading
+              Hedera-Verified Carbon Trading
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Multi-layered verification with AI-powered dMRV and immutable on-chain records.
