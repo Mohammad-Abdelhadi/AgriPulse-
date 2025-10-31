@@ -60,7 +60,7 @@ const LandingPage = () => {
             <div className="relative mt-12 md:mt-0 rounded-[124px]">
               <img 
                 src="https://copper-careful-dragonfly-654.mypinata.cloud/ipfs/bafybeid2h6frz7iwmas4gq4w7dtkaocnvg3degdqnljc33yccf2wvyw7oq"
-                alt="Sustainable farming meets blockchain technology" 
+                alt="Sustainable farming meets DLT technology" 
                 className="relative rounded-2xl shadow-2xl w-full"
               />
             </div>

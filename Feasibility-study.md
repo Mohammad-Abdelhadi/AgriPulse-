@@ -12,7 +12,7 @@ CONTENTS
 ----------------------------------------------------------------------
 1.  Executive Summary
 2.  The Problem & The MENA Opportunity
-3.  Our Solution: Precision Agriculture Meets Blockchain
+3.  Our Solution: Precision Agriculture Meets DLT
 4.  Business Model & Go-to-Market Strategy
 5.  Roadmap & KPIs: From Jordan to the Region
 6.  Financial Projections (3-Year Forecast)
@@ -48,7 +48,7 @@ The Voluntary Carbon Market (VCM) has failed farmers in climate-stressed regions
 **AgriPulse is the solution.** We are building the trust and financial infrastructure to channel global climate finance directly to Jordanian farms.
 
 ----------------------------------------------------------------------
-3. OUR SOLUTION: PRECISION AGRICULTURE MEETS BLOCKCHAIN
+3. OUR SOLUTION: PRECISION AGRICULTURE MEETS DLT
 ----------------------------------------------------------------------
 
 *   **AI-Powered dMRV for Arid Regions:** Our system uses Google Gemini to instantly analyze farm data, focusing on metrics relevant to Jordan, such as water-saving irrigation techniques and dryland soil health practices. It validates ownership certificates and assesses the plausibility of the farm's story, slashing verification costs to near zero.
