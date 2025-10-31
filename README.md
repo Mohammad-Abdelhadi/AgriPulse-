@@ -125,6 +125,15 @@ The full breakdown of this calculation is recorded on the HCS, ensuring anyone c
 
 ## 7. Future Enhancements
 
-- **🚀 Service Provider Marketplace:** Introduce a new "Service Provider" user role where agricultural consultants and equipment suppliers can list their services. Farmers can use their earnings to purchase these services, creating a circular, self-sustaining economy.
-- **🚀 Advanced dMRV:** Integrate satellite imagery and IoT data to provide even more robust and automated verification of sustainable practices.
-- **🚀 Governance Token & DAO:** Introduce a platform governance token, allowing the community of farmers and investors to vote on key platform parameters like commission rates and new feature development.
+### Phase 1: Foundational Enhancements & Core Features
+-   **Backend & Database Integration:** Transition from local storage to a secure backend and database to manage user data, farm details, and NFT metadata, ensuring scalability and data integrity.
+-   **Real Wallet Integration:** Implement support for browser extension wallets like HashPack using the Hedera WalletConnect standard, removing the need for users to handle private keys directly.
+-   **Enhanced dMRV & Farm Registration:** Expand the farm registration form with more detailed fields (e.g., soil type, historical land use, water sources) to feed into an improved dMRV model for more accurate CO2e calculations.
+-   **Comprehensive User Profiles:** Develop dedicated profile pages for farmers and investors. These pages will showcase a user's transaction history, a gallery of their earned NFTs, and role-specific information like a farmer's portfolio of farms or an investor's total retired credits.
+-   **Marketplace V2 - Filtering & Search:** Upgrade the marketplace with advanced filtering (by location, crop type, price, etc.) and search functionality to improve discoverability for investors.
+
+### Phase 2: Ecosystem Expansion & Liquidity
+-   **Secondary Marketplace:** Launch a peer-to-peer (P2P) marketplace enabling investors to trade their liquid carbon credit tokens with each other. This will increase liquidity and create a more dynamic market.
+-   **Verifiable Retirement Certificates:** Upon retiring credits, automatically generate a downloadable, shareable certificate (e.g., PDF) that includes transaction details and on-chain proof, providing formal documentation for ESG reporting.
+-   **Service Provider Marketplace:** Introduce a new "Service Provider" user role, creating a marketplace where agricultural consultants and equipment suppliers can offer their services to farmers, fostering a circular economy within the platform.
+-   **Governance & DAO:** Begin the development of a platform governance token. This will empower the community of farmers and investors to vote on key platform parameters like commission rates and feature development, progressively decentralizing control.
