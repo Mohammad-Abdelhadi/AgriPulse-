@@ -205,8 +205,6 @@ export interface FarmContextType {
     retireCredits: (amount: number) => Promise<void>;
     deletePlatformToken: () => Promise<void>;
     deleteNftCollection: (collectionId: string) => Promise<void>;
-    deleteMultipleTokens: (tokenIds: string[], logCallback: (message: string) => void) => Promise<{ success: number; failed: number; summary: string }>;
-    dissociateMultipleTokens: (tokenIds: string[], userRole: AppRole, logCallback: (message: string) => void) => Promise<{ success: number; failed: number; summary: string }>;
 }
 
 export interface NotificationContextType {

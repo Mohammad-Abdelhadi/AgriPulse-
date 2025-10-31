@@ -481,99 +481,6 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    // --- CLEANUP ---
-    const deleteMultipleTokens = async (tokenIds: string[], logCallback: (message: string) => void): Promise<{ success: number; failed: number, summary: string }> => {
-        if (!user || user.role !== AppRole.ADMIN || !user.hederaAccountId || !user.hederaPrivateKey) {
-            logCallback("ERROR: Admin privileges required for deletion.");
-            return { success: 0, failed: tokenIds.length, summary: "Admin privileges required." };
-        }
-        
-        let successCount = 0;
-        for (const tokenId of tokenIds) {
-            try {
-                logCallback(`Processing DELETE for ${tokenId}...`);
-                const tokenInfo = await hederaService.getTokenInfo(tokenId);
-                
-                if (tokenInfo.type === 'FUNGIBLE_COMMON' && tokenInfo.total_supply > 0) {
-                     logCallback(`Token ${tokenId} has a supply. Wiping treasury balance...`);
-                     const adminBalance = await hederaService.getRealAccountBalance(user.hederaAccountId);
-                     const tokenBalance = adminBalance.tokens.find(t => t.tokenId === tokenId)?.balance || 0;
-                     if (tokenBalance > 0) {
-                        await hederaService.wipeTokens(user.hederaAccountId, user.hederaPrivateKey, user.hederaAccountId, tokenId, tokenBalance);
-                        logCallback(`Wiped ${tokenBalance} from treasury.`);
-                     } else {
-                        logCallback(`Treasury balance is already zero.`);
-                     }
-                } else if (tokenInfo.type === 'NON_FUNGIBLE_UNIQUE') {
-                    logCallback(`Token ${tokenId} is an NFT. Burning all serials...`);
-                    const allNfts = await hederaService.getAllNftsForCollection(tokenId);
-                    if (allNfts.length > 0) {
-                         const serials = allNfts.map(n => n.serial_number);
-                         await hederaService.burnNftBatch(tokenId, serials, user.hederaAccountId, user.hederaPrivateKey);
-                         logCallback(`Burned ${serials.length} NFTs.`);
-                    } else {
-                        logCallback(`No NFTs to burn.`);
-                    }
-                }
-                
-                await hederaService.deleteToken(tokenId, user.hederaAccountId, user.hederaPrivateKey);
-                logCallback(`SUCCESS: Token ${tokenId} deleted.`);
-                successCount++;
-            } catch (e: any) {
-                logCallback(`FAILED to delete ${tokenId}: ${e.message}`);
-            }
-        }
-        const summary = `Operation Complete: ${successCount} deleted, ${tokenIds.length - successCount} failed.`;
-        return { success: successCount, failed: tokenIds.length - successCount, summary };
-    };
-    
-    const dissociateMultipleTokens = async (tokenIds: string[], userRole: AppRole, logCallback: (message: string) => void): Promise<{ success: number; failed: number, summary: string }> => {
-        if (!user || !user.hederaAccountId || !user.hederaPrivateKey) {
-            logCallback("ERROR: User wallet not connected.");
-            return { success: 0, failed: tokenIds.length, summary: "Wallet not connected." };
-        }
-        
-        let successCount = 0;
-        for (const tokenId of tokenIds) {
-            try {
-                logCallback(`Attempting to dissociate from ${tokenId}...`);
-                const allUsers = JSON.parse(localStorage.getItem('agripulse_users') || '{}');
-                const adminUser = Object.values(allUsers).find((u: any) => u.role === AppRole.ADMIN) as User;
-                if (!adminUser || !adminUser.hederaAccountId) {
-                    throw new Error("Admin account not found for asset return.");
-                }
-
-                const balanceInfo = await hederaService.getRealAccountBalance(user.hederaAccountId);
-                const assetsToTransfer = [];
-
-                const tokenBalance = balanceInfo.tokens.find(t => t.tokenId === tokenId);
-                if (tokenBalance && tokenBalance.balance > 0) {
-                    assetsToTransfer.push({ tokenId: tokenId, amount: tokenBalance.balance });
-                    logCallback(`Found ${tokenBalance.balance} of ${tokenId} to transfer.`);
-                }
-                const nftSerials = await hederaService.getNftsForAccountInCollection(user.hederaAccountId, tokenId);
-                if (nftSerials.length > 0) {
-                    assetsToTransfer.push({ tokenId: tokenId, serials: nftSerials.map(n => n.serial_number) });
-                     logCallback(`Found ${nftSerials.length} NFTs from ${tokenId} to transfer.`);
-                }
-                if (assetsToTransfer.length > 0) {
-                    await hederaService.transferAssetsBackToAdmin(user.hederaAccountId, user.hederaPrivateKey, adminUser.hederaAccountId, assetsToTransfer);
-                    logCallback(`Assets for ${tokenId} transferred back to admin.`);
-                }
-
-                await hederaService.dissociateTokens(user.hederaAccountId, user.hederaPrivateKey, [tokenId]);
-                logCallback(`SUCCESS: Dissociated from ${tokenId}.`);
-                successCount++;
-            } catch (e: any)
-            {
-                logCallback(`FAILED to dissociate from ${tokenId}: ${e.message}`);
-            }
-        }
-
-        const summary = `Operation Complete: ${successCount} dissociated, ${tokenIds.length - successCount} failed.`;
-        return { success: successCount, failed: tokenIds.length - successCount, summary };
-    };
-
     return (
         <FarmContext.Provider value={{
             farms, purchases, retirements, farmerNfts, investorNfts, platformTokenInfo, 
@@ -585,7 +492,6 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             createInvestorNftCollection, associateWithInvestorNftCollection,
             createFarmNftCollection, initializePlatform,
             retireCredits, deletePlatformToken, deleteNftCollection,
-            deleteMultipleTokens, dissociateMultipleTokens
         }}>
             {children}
         </FarmContext.Provider>

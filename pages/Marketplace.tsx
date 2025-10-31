@@ -89,14 +89,20 @@ const Marketplace: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                                {farm.hcsLog && (
-                                    <div className="mt-4 pt-4 border-t border-gray-200">
+                                <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
+                                    {farm.hcsLog && (
                                         <a href={farm.hcsLog} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-xs font-semibold text-primary hover:underline">
                                              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            On-Chain Verification Receipt
+                                            Verification Log
                                         </a>
-                                    </div>
-                                )}
+                                    )}
+                                    {farm.farmNftHashscanUrl && (
+                                         <a href={farm.farmNftHashscanUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-xs font-semibold text-primary hover:underline">
+                                             <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                                            View Farm NFT
+                                        </a>
+                                    )}
+                                </div>
                             </div>
                             <div className="bg-gray-50 p-6">
                                 <button 

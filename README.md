@@ -6,110 +6,125 @@
 
 ## Table of Contents
 1.  [Executive Summary](#1-executive-summary)
-2.  [The Problem We Solve](#2-the-problem-we-solve)
-3.  [Our Solution](#3-our-solution)
-4.  [Technology Stack](#4-technology-stack)
-5.  [The Complete Project Flow](#5-the-complete-project-flow)
-6.  [Project Phases & Features](#6-project-phases--features)
-    - [Phase 1: Implemented MVP Features](#phase-1-implemented-mvp-features)
-    - [Phase 2: Planned Enhancements](#phase-2-planned-enhancements)
-7.  [Future Development: Backend Integration](#7-future-development-backend-integration)
+2.  [The Problem We Solve: A Focus on Jordan](#2-the-problem-we-solve-a-focus-on-jordan)
+3.  [Our Solution: A Multi-Layered Approach to Trust](#3-our-solution-a-multi-layered-approach-to-trust)
+4.  [The Complete Project Flow](#4-the-complete-project-flow)
+5.  [The dMRV System Explained](#5-the-dmrv-system-explained)
+6.  [Technology Stack & Why Hedera](#6-technology-stack--why-hedera)
+7.  [Future Enhancements](#7-future-enhancements)
+
 
 ---
 
 ## 1. Executive Summary
 
-The project's mission is to democratize access to the carbon market, eliminate "greenwashing" through radical transparency, and channel funds directly to those making a real environmental impact on the ground. By leveraging Hedera's low-cost, high-throughput DLT and Google's Gemini AI for verification, AgriPulse provides a seamless experience for all participants.
+AgriPulse's mission is to democratize access to the carbon market, eliminate "greenwashing" through radical transparency, and channel funds directly to those making a real environmental impact. Our initial focus is on empowering the sustainable farming community in **Jordan**, with a vision for regional and global expansion.
+
+We connect two key groups:
+-   **Sustainable Farmers:** Small and medium-sized farmers in Jordan and beyond who implement practices that sequester carbon from the atmosphere.
+-   **Corporations & Investors:** Entities that need to offset their carbon footprint in a verifiable and impactful way.
+
+By leveraging Hedera's low-cost, high-throughput DLT and Google's Gemini AI for verification, AgriPulse provides a seamless, trustworthy, and efficient experience for all participants.
 
 ---
 
-## 2. The Problem We Solve
-The traditional voluntary carbon market is plagued with critical issues:
-- **Opacity & Lack of Trust:** Difficulty in verifying the authenticity of carbon credits, leading to "greenwashing."
-- **High Intermediary Costs:** Brokers and certifiers take significant cuts, reducing funds for farmers.
-- **Barriers to Entry:** The certification process is often too expensive and complex for smallholder farmers.
-- **Inefficient Settlement:** Transactions are slow, and payments can take months to process.
+## 2. The Problem We Solve: A Focus on Jordan
+
+The traditional voluntary carbon market is plagued with critical issues that disproportionately affect farmers in developing regions like Jordan:
+
+-   **Opacity & Lack of Trust:** It's difficult for buyers to verify that the carbon credits they purchase represent real, permanent carbon sequestration. This leads to "greenwashing," where companies claim environmental impact without proof.
+-   **High Intermediary Costs:** A complex web of brokers, certifiers, and registries takes a significant cut, meaning only a fraction of the investment reaches the farmers. In Jordan, where profit margins are already slim, this makes participation unviable.
+-   **Barriers to Entry for Small Farmers:** The process of getting certified is often too expensive (costing thousands of dollars) and complex for smallholder farmers, excluding a vast majority of Jordan's agricultural producers from a vital source of income.
+-   **Inefficient Settlement:** Transactions are slow, and payments can take months to process, creating cash flow problems for farmers.
 
 ---
 
-## 3. Our Solution
-AgriPulse leverages Hedera and AI to build a next-generation marketplace that directly addresses these problems.
-- **AI-Powered dMRV:** A multi-layered verification system using Google Gemini API to analyze farm data for plausibility, consistency, and authenticity, preventing spam and fraud.
-- **On-Chain Audit Trail:** Every verification decision is immutably recorded on the **Hedera Consensus Service (HCS)**, providing a public, unchangeable audit trail that anyone can inspect.
-- **Instant, Low-Cost Transactions:** Hedera's native **Atomic Swaps** facilitate instant, peer-to-peer trades without costly smart contract intermediaries.
+## 3. Our Solution: A Multi-Layered Approach to Trust
+
+AgriPulse leverages Hedera and AI to build a next-generation marketplace that directly addresses these problems. Our approach to data integrity is built on multiple layers of validation:
+
+| Layer                       | How AgriPulse Implements It                                                                                                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Layer 1: Client-Side**    | The farm registration form uses standard HTML5 validation to provide immediate feedback, ensuring basic data quality before submission.                                                    |
+| **Layer 2: AI-Powered dMRV**| Our system uses Google Gemini API to analyze the plausibility and consistency of the submitted data, preventing spam and nonsensical entries and providing a robust quality check.        |
+| **Ultimate Proof: On-Chain**| The full, detailed report from our dMRV service, including the AI analysis, is recorded as an immutable message on the **Hedera Consensus Service (HCS)**, providing a public, unchangeable audit trail. |
+
+**Core Features:**
+-   **Efficiency & Low Cost:** By using Hedera's native **Atomic Swaps**, we eliminate costly intermediaries. The transaction is instant, and funds are split (e.g., 95% to farmer, 5% to platform) in a single, trustless step.
+-   **Engagement & UX:** We use Google's Gemini API to create unique, AI-generated artwork for achievement NFTs awarded to both farmers and investors, enhancing user engagement.
 
 ---
 
-## 4. Technology Stack
-- **Frontend:** React, TypeScript, TailwindCSS
-- **AI Integration:** Google Gemini API (for dMRV and metadata generation)
-- **Decentralized Storage:** IPFS (via Pinata) for storing NFT metadata and farm documentation.
-- **Blockchain:** Hedera Hashgraph (HTS, HCS, Atomic Swaps)
-- **Data Persistence (MVP):** Browser `localStorage` (to be replaced by a full backend).
+## 4. The Complete Project Flow
 
----
-
-## 5. The Complete Project Flow
 This is the entire lifecycle of a carbon credit on the AgriPulse platform.
 
-### A. Platform Initialization (Admin)
-1.  **One-Click Setup:** The Admin uses their dashboard to deploy all necessary on-chain assets:
-    *   **HCS Topic:** An immutable logbook for all dMRV audit trails.
-    *   **NFT Collections:** For Farm Verification, Farmer Achievements, and Investor Certificates.
-    *   **Fungible Token:** The core carbon credit token, with its supply held in the Admin treasury.
+### **Phase 1: Platform Initialization (Admin Role)**
+The platform cannot function until the on-chain infrastructure is established.
+1.  **Login as Admin:** The administrator accesses their dashboard.
+2.  **Initialize Platform:** With a single action, the admin's Hedera account creates and configures all necessary assets on the Hedera Testnet:
+    -   **Hedera Consensus Service (HCS) Topic:** An immutable logbook is created to record all farm verification decisions. This is the foundation of our transparency.
+    -   **NFT Collections:** Collections are created for Farm Verification (APF), Farmer Achievements (APL), and Investor Certificates (API).
+    -   **Fungible Platform Token (e.g., JCO2):** The core carbon credit token is created, representing one ton of verified CO₂e. The supply is held in the admin's treasury.
 
-### B. The Farmer's Journey (Creating Supply)
+### **Phase 2: The Farmer's Journey (Creating Supply)**
 1.  **Onboarding:** A farmer signs up and connects their Hedera wallet.
-2.  **Farm Registration:** The farmer submits farm details, sustainable practices, and proof of ownership.
-3.  **AI-Powered Verification (dMRV):** The system analyzes the data for plausibility and scores the farm. The full report, including the AI's justification, is submitted to the **HCS Topic**.
-4.  **Approval & Minting:** If approved, a unique **Farm NFT** is minted to the farmer's wallet as a certificate of authenticity, and the corresponding amount of carbon credit tokens is minted to the platform treasury. The farm is now listed on the marketplace.
+2.  **Data Submission:** The farmer fills out the registration form with details about their farm and sustainable practices.
+3.  **Automated Verification (dMRV) with AI:** Our `dMRVService` performs its multi-layered check, including an AI analysis for data plausibility.
+4.  **On-Chain Auditing (HCS):** The full dMRV report is submitted to the HCS topic, creating a permanent, timestamped, and unchangeable audit record.
+5.  **Approval & NFT Minting:** If approved, a unique **Farm NFT (APF)** is minted to the farmer as an on-chain verification certificate, and the farm is listed on the marketplace.
 
-### C. The Investor's Journey (Meeting Demand)
-1.  **Due Diligence:** An investor browses the marketplace, filtering by location, and can view the immutable **HCS verification receipt** for any farm.
-2.  **Purchase (Primary Market):** The investor buys credits directly from the platform via an **Atomic Swap**. HBAR is exchanged for carbon credit tokens instantly. A platform commission is automatically deducted and sent to the Admin account.
-3.  **Trade (Secondary Market):** An investor can list their purchased carbon credits on the **Secondary Marketplace** for a set price. Another investor can then purchase these credits via a **peer-to-peer Atomic Swap**, where HBAR and tokens are exchanged directly between the two investors, with a small commission automatically sent to the platform.
-4.  **Retirement:** To claim their environmental impact, an investor "retires" their credits. This triggers a `TokenWipeTransaction`, permanently destroying the tokens and providing the investor with an on-chain proof of retirement.
+### **Phase 3: The Investor's Journey (Meeting Demand)**
+1.  **Due Diligence:** An investor browses the marketplace and can view the immutable **HCS verification receipt** for any farm directly on HashScan.
+2.  **Purchase (The Atomic Swap):** The investor buys credits. A single, multi-party atomic swap is executed on Hedera:
+    -   Investor's HBAR is withdrawn.
+    -   ~95% of HBAR is instantly sent to the farmer.
+    -   ~5% of HBAR is instantly sent to the platform as a commission.
+    -   The corresponding amount of JCO2 tokens is instantly transferred from the treasury to the investor.
+3.  **Achievement NFTs:** For significant purchases, the Gemini API generates unique artwork, which is used to mint and award achievement NFTs to both the investor and the farmer.
+
+### **Phase 4: Achieving Real-World Impact (Retirement)**
+1.  **Retirement:** An investor "retires" their tokens to claim their environmental impact.
+2.  **Token Wipe:** This action triggers a `TokenWipeTransaction`, permanently destroying the selected tokens from the investor's wallet.
+3.  **Proof of Impact:** The investor receives proof of retirement via the transaction link on HashScan.
 
 ---
 
-## 6. Project Phases & Features
+## 5. The dMRV System Explained
 
-### Phase 1: Implemented MVP Features
-This is the core functionality available in the current version of AgriPulse.
+Our dMRV is a multi-layered, score-based system with an approval threshold of **70/100**.
 
-- **✅ User Roles & Dashboards:** Dedicated dashboards for Farmers, Investors, and a platform Admin.
-- **✅ AI-Powered dMRV:** A robust, automated farm verification system using Google Gemini.
-- **✅ Primary Marketplace:** Investors can browse verified farms and purchase carbon credits directly from the platform treasury using Hedera Atomic Swaps.
-- **✅ Secondary P2P Marketplace:** A dedicated marketplace where investors can list their carbon credit tokens for sale and trade directly with other investors.
-- **✅ Advanced Farm Search:** The marketplace includes a search filter to find farms based on location (country, city).
-- **✅ Public User Profiles:** All users have a public profile page. Farmers can showcase their verified farms, and investors can display their company information and on-chain impact.
-- **✅ On-Chain Achievements:** Unique NFTs are awarded to both farmers and investors for significant transactions, with metadata stored on IPFS.
-- **✅ Credit Retirement:** Investors can permanently retire their carbon credits, with the transaction recorded on-chain as proof of impact.
-- **✅ Full On-Chain Audit Trail:** Every critical action, from verification to retirement, is logged on the Hedera Consensus Service.
+-   **Layer 1: Client-Side Validation:** Ensures data format and length are correct before submission.
+-   **Layer 2: Rule-Based Scoring:**
+    -   Data Completeness (15 points)
+    -   Sustainable Practices (35 points)
+    -   Economic & Scientific Logic (20 points)
+    -   Certificate Validation (30 points)
+-   **Layer 3: AI-Powered Quality Assurance:**
+    -   The Gemini API analyzes the textual data for plausibility.
+    -   If the AI detects spam or nonsensical data, it applies a heavy penalty to the total score, ensuring rejection.
 
-### Phase 2: Planned Enhancements
-These features represent the next stage of development to expand the AgriPulse ecosystem.
+The full breakdown of this calculation is recorded on the HCS, ensuring anyone can audit our decisions.
 
-- **🚀 Full Backend Integration:** Transition from browser `localStorage` to a scalable backend infrastructure. This will enable user data persistence, advanced analytics, and a more robust platform.
-- **🚀 Service Provider Marketplace:** Introduce a new "Service Provider" user role.
-    -   Providers (e.g., equipment rental companies, agricultural consultants) can list their services on a dedicated marketplace.
-    -   Farmers can use their earnings from credit sales to purchase these services directly on the platform, creating a circular, self-sustaining economy.
-    -   This fosters a local support network for farmers, helping them further improve their sustainable practices.
-- **🚀 Advanced dMRV with Satellite/IoT Data:** Integrate with external data sources (e.g., satellite imagery APIs, on-farm IoT sensors) to provide even more robust and automated verification of sustainable practices.
+---
+
+## 6. Technology Stack & Why Hedera
+
+-   **Frontend:** React, TypeScript, TailwindCSS
+-   **AI Integration:** Google Gemini API
+-   **Decentralized Storage:** IPFS (via Pinata)
+-   **Blockchain:** Hedera Hashgraph
+
+**Why Hedera was the PERFECT choice:**
+-   **Hedera Token Service (HTS):** HTS is a native service on Hedera, which means creating, minting, and transferring tokens is incredibly fast, low-cost, and secure without the need to write and audit complex, gas-intensive smart contracts.
+-   **Atomic Swaps:** Hedera's ability to handle complex, multi-party `TransferTransactions` is the engine of our marketplace. It allows us to execute a trustless exchange (HBAR for Tokens, with commission) in a single, instant transaction.
+-   **Hedera Consensus Service (HCS):** This is our key differentiator. HCS provides a fast, low-cost, and provably fair way to log data immutably. We use it as the ultimate source of truth for our dMRV audit trail.
+-   **Sustainability:** Hedera is a proof-of-stake network with an incredibly low carbon footprint. Building a climate solution on an energy-intensive blockchain would be counter-intuitive. Hedera's sustainability aligns perfectly with our core mission.
+
+---
+
+## 7. Future Enhancements
+
+- **🚀 Service Provider Marketplace:** Introduce a new "Service Provider" user role where agricultural consultants and equipment suppliers can list their services. Farmers can use their earnings to purchase these services, creating a circular, self-sustaining economy.
+- **🚀 Advanced dMRV:** Integrate satellite imagery and IoT data to provide even more robust and automated verification of sustainable practices.
 - **🚀 Governance Token & DAO:** Introduce a platform governance token, allowing the community of farmers and investors to vote on key platform parameters like commission rates and new feature development.
-
----
-
-## 7. Future Development: Backend Integration
-The current MVP uses browser `localStorage` for rapid prototyping and demonstration. The next critical step for a production-ready application is to integrate a dedicated backend.
-
-**Proposed Stack:**
-- **API:** Node.js with Express.js or a similar framework.
-- **Database:** PostgreSQL for relational data (Users, Farms, Listings).
-- **Authentication:** JWT-based authentication managed by the backend.
-
-**Integration Plan:**
-1.  **Develop API Endpoints:** Create RESTful or GraphQL endpoints for all CRUD (Create, Read, Update, Delete) operations currently handled by `localStorage`.
-2.  **Refactor Contexts:** Update the React contexts (`AuthContext`, `FarmContext`) to fetch data from the new API endpoints instead of `localStorage`.
-3.  **Secure Sensitive Operations:** Move logic that requires administrative privileges (e.g., initiating minting operations) to be authorized and triggered by the secure backend, which would then interact with the Hedera network.
-4.  **User Data Management:** All user profiles, farm data, and marketplace listings will be persisted in the database, providing a single source of truth and enabling a more scalable and reliable user experience.

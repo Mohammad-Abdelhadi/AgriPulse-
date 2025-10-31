@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
-import WalletCleanupTool from '../components/WalletCleanupTool';
 
 const WalletPage: React.FC = () => {
     const { user, updateUserWallet } = useAuth();
@@ -77,17 +76,6 @@ const WalletPage: React.FC = () => {
                         </div>
                     </form>
                 </div>
-            </div>
-            
-             <div className="bg-white p-8 rounded-xl shadow-lg">
-                <h2 className="text-2xl font-bold text-text-primary mb-4">Wallet Tools</h2>
-                {user?.hederaAccountId ? (
-                    <WalletCleanupTool />
-                ) : (
-                    <p className="text-text-secondary">
-                        Please connect and save your wallet credentials above to access wallet management tools.
-                    </p>
-                )}
             </div>
         </div>
     );

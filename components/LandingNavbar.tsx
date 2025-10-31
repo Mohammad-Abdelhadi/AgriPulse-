@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { LeafIcon } from './icons';
 
 const LandingNavbar: React.FC = () => {
     const [menuOpen, setMenuOpen] = useState(false);
 
     const links = [
-        { path: '/marketplace', label: 'Marketplace' },
-        { path: '/our-process', label: 'Our Process' },
+        { href: '#solution', label: 'Solution' },
+        { href: '#how-it-works', label: 'How It Works' },
+        { href: '#technology', label: 'Technology' },
     ];
     
-    const activeLinkClass = "text-primary font-semibold";
-    const inactiveLinkClass = "text-text-secondary hover:text-primary transition-colors";
+    const inactiveLinkClass = "text-sm font-medium text-text-secondary hover:text-primary transition-colors";
 
     return (
         <header className="bg-background/80 backdrop-blur-sm shadow-sm sticky top-0 z-50">
@@ -22,20 +22,24 @@ const LandingNavbar: React.FC = () => {
                 </Link>
 
                 <nav className="hidden md:flex items-center space-x-8">
-                    {links.map(({ path, label }) => (
-                        <NavLink 
-                            key={path} 
-                            to={path} 
-                            className={({ isActive }) => isActive ? activeLinkClass : inactiveLinkClass}
+                    {links.map(({ href, label }) => (
+                        <a 
+                            key={href} 
+                            href={href} 
+                            className={inactiveLinkClass}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+                            }}
                         >
                             {label}
-                        </NavLink>
+                        </a>
                     ))}
                 </nav>
 
                 <div className="hidden md:flex items-center space-x-4">
                     <Link to="/auth" className="bg-primary text-white px-5 py-2.5 rounded-lg hover:bg-primary-dark transition-colors font-semibold">
-                        Login / Sign Up
+                        Get Started
                     </Link>
                 </div>
 
@@ -49,19 +53,23 @@ const LandingNavbar: React.FC = () => {
             {menuOpen && (
                 <div className="md:hidden bg-white py-4 px-4 animate-fade-in">
                     <nav className="flex flex-col space-y-4">
-                        {links.map(({ path, label }) => (
-                            <NavLink 
-                                key={path} 
-                                to={path} 
-                                className={({ isActive }) => `text-lg ${isActive ? activeLinkClass : inactiveLinkClass}`}
-                                onClick={() => setMenuOpen(false)}
+                        {links.map(({ href, label }) => (
+                            <a 
+                                key={href} 
+                                href={href} 
+                                className="text-lg text-text-secondary hover:text-primary"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setMenuOpen(false);
+                                    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+                                }}
                             >
                                 {label}
-                            </NavLink>
+                            </a>
                         ))}
                         <div className="border-t pt-4">
                             <Link to="/auth" onClick={() => setMenuOpen(false)} className="block text-center w-full bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors font-semibold">
-                                Login / Sign Up
+                                Get Started
                             </Link>
                         </div>
                     </nav>
