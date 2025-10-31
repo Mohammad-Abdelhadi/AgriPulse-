@@ -1,7 +1,6 @@
 
-======================================================================
      AgriPulse - Feasibility Study & Strategic Plan
-======================================================================
+
 
 Document Version: 5.0
 Focus Area: Jordan & the MENA Region
