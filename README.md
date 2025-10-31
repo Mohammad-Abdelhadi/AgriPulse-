@@ -1,6 +1,7 @@
 # AgriPulse: A Decentralized Carbon Credit Marketplace
 
 **AgriPulse** is a decentralized carbon credit marketplace built on the Hedera network, designed to create a transparent, efficient, and trustworthy bridge between sustainable farmers and ESG-focused investors.
+
 Live Demo : 
 https://agripulsehedera.netlify.app/
 
