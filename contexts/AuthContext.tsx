@@ -20,18 +20,18 @@ const setupInitialUsers = () => {
             'admin@admin.com': {
                 id: 'user_admin',
                 email: 'admin@admin.com',
-                password: 'password',
+                password: 'admin123',
                 role: AppRole.ADMIN,
-                hederaAccountId: '0.0.6928173',
-                hederaPrivateKey: '302e020100300506032b657004220420e1ee943a8de34d62da506b0512e6641eaed1850670577341f7cfc9c1f73245ce'
+                hederaAccountId: '0.0.7163581',
+                hederaPrivateKey: '302e020100300506032b65700422042024ff6a42bea06aad9655d8d07164045c4d7c494d2be4b9fa1eaea8e671a0619f'
             },
             'inv@inv.com': {
                 id: 'user_investor',
                 email: 'inv@inv.com',
-                password: 'password',
+                password: 'investor123',
                 role: AppRole.INVESTOR,
-                hederaAccountId: '0.0.7085970',
-                hederaPrivateKey: '302e020100300506032b6570042204206c23a08e9dc11cbb48eacd1a9071883f601a0ccc18845956ad67f4e3a95c7742',
+                hederaAccountId: '0.0.7130606',
+                hederaPrivateKey: '302e020100300506032b65700422042000e227178147eea656b8553dc31a8c708be0d42980b882c9870fae071d6a2320',
                 companyProfile: {
                     name: 'GreenShift Ventures',
                     location: 'Dubai, UAE',
@@ -42,10 +42,10 @@ const setupInitialUsers = () => {
             'farmer@farm.com': {
                 id: 'user_farmer',
                 email: 'farmer@farm.com',
-                password: 'password',
+                password: 'farmer123',
                 role: AppRole.FARMER,
                 hederaAccountId: '0.0.7099230',
-                hederaPrivateKey: '302e020100300506032b657004220420c3d3e5dd8a0b57aaa5e50db9e243d031d8426a014bf691c8e514178f81298613'
+                hederaPrivateKey: '302e020100300506032b65700422042020e48e9ebc896eb094ea9122b8c68e594fe5331c703bdee9913a6e5486f2442d'
             }
         };
         localStorage.setItem('agripulse_users', JSON.stringify(initialUsers));

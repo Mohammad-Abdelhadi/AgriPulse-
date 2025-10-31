@@ -39,7 +39,7 @@ const ProfilePage: React.FC = () => {
                 <p className="mt-2 text-lg text-text-secondary">Manage your account details and view your on-chain assets.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
                 <div className="md:col-span-1 space-y-8">
                     <div className="bg-white p-6 rounded-xl shadow-lg">
                         <h2 className="text-xl font-bold text-text-primary mb-4 border-b pb-3">Account Details</h2>
