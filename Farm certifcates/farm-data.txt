@@ -1,0 +1,67 @@
+🌾 Farm Summaries
+1️⃣ Golden Grain Oasis Fields Cooperative of Al-Mafraq Plains
+Farm Name: Ahmad Mahmoud Al-Khatib
+Location: Al-Mafraq Governorate – North Eastern Region
+ (32.3389N, 36.2085E)
+Land Area: 45 dunum
+Agricultural Type: Wheat and Barley
+My Farm’s Story:
+Nestled in the highlands of Al-Mafraq, this farm has passed through generations of growers dedicated to cereal production. Over time, new irrigation systems and soil health practices have transformed it into a model of sustainable dryland agriculture.
+Carbon Reduction Practices:
+✅ No-till/Minimum tillage
+✅ Reduced chemical fertilizer
+✅ Efficient irrigation
+
+2️⃣ Silver Olive Ridge Organic Estate of Al-Faisaliah Heights
+Farm Name: Yousef Hassan Abu Soud
+Location: Madaba Governorate – Al-Faisaliah Area
+ (31.7154N, 35.7941E)
+Land Area: 18 dunum
+Agricultural Type: Olive Trees and Vegetables
+My Farm’s Story:
+Carved into rocky Madaba soil, this farm has been reimagined as a sustainable olive and vegetable estate. Solar-powered pumps and drip irrigation preserve groundwater while native shrubs provide natural pest control and carbon sequestration.
+Carbon Reduction Practices:
+✅ No-till/Minimum tillage
+✅ Cover cropping
+✅ Managed grazing
+
+3️⃣ Sunrise Palm Haven and Greenhouse Sanctuary of Al-Mazraa
+Farm Name:  Layla Khaled Al-Hroub
+Location: Karak Governorate – Al-Mazraa District 
+(31.1740N, 35.7409E)
+Land Area: 25 dunum
+Agricultural Type: Date Palms, Beekeeping, Greenhouse Vegetables
+My Farm’s Story:
+Once a modest palm grove, the farm evolved into a thriving eco-agro complex combining date production, pollination from local bee colonies, and year-round vegetables. Solar water pumps and natural compost cycles keep the oasis self-sustaining.
+Carbon Reduction Practices:
+✅ Reduced chemical fertilizer
+✅ Cover cropping
+✅ Efficient irrigation
+
+
+4 fake_farm_data_filled_AAAA 
+Farm Name 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+Location:
+aaaaaaaa Governorate
+Land Area:
+1000 dunum
+
+Agricultural Type:
+Olives
+
+My Farm’s Story (full):
+AAAAAAAA is a small, intentionally-restored olive holding located in the heart of aarrr. Over the past decade the owner replanted terraces, installed drip irrigation, and introduced native cover crops to rebuild soil life. The farm focuses on low-input olive production and works with local beekeepers to maintain pollinator habitat. Long-term goals include increasing organic matter, establishing a small agroforestry strip, and reducing fossil fuel use through solar pumps and more efficient transport. Community training days and seed-saving exchanges are part of the farm’s outreach to build a regional resilience network.
+
+Carbon Reduction Practices (selected):
+
+✅ No-till / Minimum tillage
+
+✅ Reduced chemical fertilizer
+
+✅ Cover cropping
+
+✅ Efficient irrigation
+
+⬜ Managed grazing
