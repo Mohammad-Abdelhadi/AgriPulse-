@@ -1,41 +1,41 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { DatabaseIcon, LayersIcon, UsersIcon, CheckCircleIcon } from '../components/icons';
+import { DatabaseIcon, LayersIcon, UsersIcon, CheckCircleIcon, NetworkIcon, SparklesIcon } from '../components/icons';
 
 const AdminProcessPage: React.FC = () => {
     const initializationSteps = [
         {
             icon: LayersIcon,
-            title: "Create Platform Tokens",
-            description: "The Admin initiates the platform by creating all necessary on-chain assets using the Admin Dashboard. This includes the main carbon credit token (e.g., JCO2) and the three distinct NFT collections for farm verification, farmer achievements, and investor certificates."
+            title: "Establishing the Marketplace with HTS",
+            description: "The Admin uses the Hedera Token Service (HTS) to create the foundational on-chain assets: the main carbon credit token (e.g., JCO2) and the three distinct NFT collections that represent farm verifications, farmer achievements, and investor certificates."
         },
         {
             icon: DatabaseIcon,
-            title: "Establish the Audit Trail",
-            description: "A crucial step is creating the Hedera Consensus Service (HCS) topic. This acts as a permanent, tamper-proof logbook where every farm verification decision is recorded, ensuring radical transparency for all platform users."
+            title: "Building Trust with HCS",
+            description: "To solve the market's trust deficit, the Admin creates a Hedera Consensus Service (HCS) topic. This becomes the immutable, public logbook where every AI-powered dMRV decision is recorded, providing radical transparency for all users."
         },
         {
-            icon: CheckCircleIcon,
-            title: "Configure the Treasury",
-            description: "The newly created carbon credit tokens are held in the Admin's account, which functions as the platform treasury. Credits are only transferred from this treasury to an investor's wallet during a verified purchase, backed by a registered farm."
+            icon: NetworkIcon,
+            title: "Enabling Instant Liquidity",
+            description: "The newly created carbon credit tokens are held in the Admin's account, which acts as the platform treasury. This enables instant, trustless settlement via Atomic Swaps, as the treasury can guarantee the availability of tokens for every purchase."
         }
     ];
 
     const managementRoles = [
         {
             icon: UsersIcon,
-            title: "Facilitating User Interactions",
-            description: "The Admin's treasury account is a key participant in every atomic swap. By holding the platform's token supply, the Admin enables the instant, trustless exchange of HBAR from an investor for carbon credit tokens, which are then sent to the investor."
+            title: "Powering the Economy via Atomic Swaps",
+            description: "The Admin's treasury account is a key, automated participant in every purchase. It facilitates the instant, three-party atomic swap that simultaneously pays the farmer, takes a platform commission, and delivers carbon credits to the investor."
         },
         {
-            icon: LayersIcon,
-            title: "Awarding On-Chain Achievements",
-            description: "Following a significant transaction, the platform automatically triggers the minting of achievement NFTs. The Admin's account, as the supply key holder for the NFT collections, executes these minting operations, rewarding both farmers and investors."
+            icon: SparklesIcon,
+            title: "Minting Verifiable Achievements",
+            description: "Following a significant transaction, the platform automatically triggers the minting of AI-generated achievement NFTs. The Admin's account, holding the NFT supply keys, executes these minting operations to reward users."
         },
         {
             icon: CheckCircleIcon,
-            title: "Platform Oversight",
-            description: "While the dMRV process is automated with AI, the Admin provides oversight for the platform's health. This includes monitoring transaction flows, managing platform-level documentation, and using the Admin Dashboard to ensure all systems are functioning correctly."
+            title: "Ensuring Marketplace Integrity",
+            description: "While most processes are automated, the Admin provides crucial oversight. This involves monitoring transaction flows via the dashboard, managing platform documentation, and ensuring all on-chain and off-chain systems function correctly."
         }
     ];
 

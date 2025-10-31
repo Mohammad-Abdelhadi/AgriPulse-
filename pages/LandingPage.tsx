@@ -193,10 +193,10 @@ const LandingPage = () => {
               </div>
               
               <div className="space-y-4">
-                <Step number={1} title="Register Your Farm" description="Connect wallet and submit sustainable practices." />
-                <Step number={2} title="AI Verification" description="dMRV system validates your data with AI analysis." />
-                <Step number={3} title="Receive Farm NFT" description="Get an on-chain verification certificate." />
-                <Step number={4} title="Earn Instantly" description="Receive 95% of payment directly via atomic swap." />
+                <Step number={1} title="Register & Connect" description="Create an account and connect your Hedera wallet to get started." />
+                <Step number={2} title="Submit for Verification" description="Detail your farm's sustainable practices and let our AI-powered dMRV system verify your impact." />
+                <Step number={3} title="List & Get Certified" description="Upon approval, receive a unique Farm NFT and get listed on our transparent marketplace." />
+                <Step number={4} title="Earn Instantly" description="Receive 95% of every sale directly to your wallet via secure, instant atomic swaps." />
               </div>
             </div>
 
@@ -210,10 +210,10 @@ const LandingPage = () => {
               </div>
               
               <div className="space-y-4">
-                <Step number={1} title="Browse Verified Farms" description="Review on-chain verification records on HashScan." isSecondary />
-                <Step number={2} title="Purchase Credits" description="Instant atomic swap transfers tokens and funds." isSecondary />
-                <Step number={3} title="Earn Achievement NFTs" description="Receive AI-generated artwork for milestones." isSecondary />
-                <Step number={4} title="Retire & Impact" description="Permanently retire tokens for verified carbon offset." isSecondary />
+                <Step number={1} title="Join & Define Goals" description="Create your corporate account and set your ESG goals to track your climate impact." isSecondary />
+                <Step number={2} title="Browse Verified Farms" description="Explore farms with publicly auditable verification records on the Hedera Consensus Service." isSecondary />
+                <Step number={3} title="Purchase with Confidence" description="Buy tokenized carbon credits instantly and securely using Hedera's atomic swaps." isSecondary />
+                <Step number={4} title="Retire & Claim Impact" description="Permanently retire credits to offset your carbon footprint and receive unique achievement NFTs." isSecondary />
               </div>
             </div>
           </div>

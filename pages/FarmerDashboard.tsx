@@ -43,7 +43,8 @@ const FarmerDashboard: React.FC = () => {
     [myFarms]);
 
     const estimatedCredits = useMemo(() => {
-        const areaInDunums = areaUnit === 'hectare' ? landArea * HECTARE_TO_DUNUM : landArea;
+        // FIX: Explicitly cast variables to Number to prevent potential type errors during arithmetic operations.
+        const areaInDunums = areaUnit === 'hectare' ? Number(landArea) * HECTARE_TO_DUNUM : Number(landArea);
         const totalEmissionFactor = Array.from(selectedPractices).reduce((sum: number, practiceId: string) => {
             const practice = PRACTICES.find(p => p.id === practiceId);
             return sum + (practice?.emissionFactor || 0);
