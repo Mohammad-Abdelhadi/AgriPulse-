@@ -4,7 +4,7 @@
 
 ## 🎥 Pitch Deck
 
-[![Pitch Deck Thumbnail](https://copper-careful-dragonfly-654.mypinata.cloud/ipfs/bafybeia5lddszeoijlim5j44ygnl5aqm4lk7tvb57vkajkab4hjsa4ayqq)](https://youtu.be/jndI3k5wi3Q)
+[![Pitch Deck Thumbnail](https://copper-careful-dragonfly-654.mypinata.cloud/ipfs/bafybeiaorzbzhhdldasmddpx5t3ikwi4c63skjh6jbg3glt6asvkbgwjva)](https://youtu.be/jndI3k5wi3Q)
 
 ## Live Demo: [agripulsehedera.netlify.app](https://agripulsehedera.netlify.app/)  
 ## Feasibility Study: [View on GitHub](https://github.com/Mohammad-Abdelhadi/AgriPulse-/blob/main/Feasibility-study.md)  
