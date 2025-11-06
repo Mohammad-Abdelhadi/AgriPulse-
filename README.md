@@ -4,11 +4,11 @@
 
 ## 🎥 Pitch Deck
 
-[![Pitch Deck Thumbnail](https://copper-careful-dragonfly-654.mypinata.cloud/ipfs/bafybeia5lddszeoijlim5j44ygnl5aqm4lk7tvb57vkajkab4hjsa4ayqq)](https://youtu.be/jndI3k5wi3Q)
+[![Pitch Deck Thumbnail](https://youtu.be/jndI3k5wi3Q)
 
-**Live Demo:** [agripulsehedera.netlify.app](https://agripulsehedera.netlify.app/)  
-**Feasibility Study:** [View on GitHub](https://github.com/Mohammad-Abdelhadi/AgriPulse-/blob/main/Feasibility-study.md)  
-**DoraHack Submission:** [View Here](https://dorahacks.io/buidl/35662)
+## Live Demo: [agripulsehedera.netlify.app](https://agripulsehedera.netlify.app/)  
+## Feasibility Study: [View on GitHub](https://github.com/Mohammad-Abdelhadi/AgriPulse-/blob/main/Feasibility-study.md)  
+## DoraHack Submission: [View Here](https://dorahacks.io/buidl/35662)
 
 # Team Certificates
 
