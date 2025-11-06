@@ -2,8 +2,22 @@
 
 **AgriPulse** is a decentralized carbon credit marketplace built on the Hedera network, designed to create a transparent, efficient, and trustworthy bridge between sustainable farmers and ESG-focused investors.
 
+## 🎥 Pitch Deck
+[![Pitch Deck]([https://img.youtube.com/vi/jndI3k5wi3Q/0.jpg](https://copper-careful-dragonfly-654.mypinata.cloud/ipfs/bafybeia5lddszeoijlim5j44ygnl5aqm4lk7tvb57vkajkab4hjsa4ayqq))]([https://youtu.be/jndI3k5wi3Q](https://youtu.be/jndI3k5wi3Q))
 **Live Demo:** [https://agripulsehedera.netlify.app/](https://agripulsehedera.netlify.app/)
 **Feasibility Study:** [View on GitHub](https://github.com/Mohammad-Abdelhadi/AgriPulse-/blob/main/Feasibility-study.md)
+** DoraHack Submmsion:** (https://dorahacks.io/buidl/35662)
+
+# Team Certificates
+
+## Mohammad Abdelhadi
+[View Certificate](https://drive.google.com/file/d/1dSCeEpGIoa2PKkyhCGFc6gjQ20w41IJR/view?usp=drive_link)
+
+## Ahmad Abdelhadi
+[View Certificate](https://drive.google.com/file/d/1pZ1K12pii17usKM0qRFZX2eHw0-_LAYV/view?usp=drive_link)
+
+## Khaled Musa
+[View Certificate](https://drive.google.com/file/d/11WqXxNc2xbToVnw-Ty--9zojqCbIsG2N/view?usp=drive_link)
 
 ---
 
